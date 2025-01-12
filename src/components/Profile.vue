@@ -9,7 +9,7 @@
       active-text-color="#fff"
     >
       <el-menu-item index="1" @click="goToBoardList">Home</el-menu-item>
-      <el-sub-menu index="2">
+      <el-sub-menu index="2" class="user-menu">
         <template #title>
           <el-avatar
             class="avatar"
@@ -18,10 +18,12 @@
           />
           {{ userId }}
         </template>
-        <el-menu-item index="2-2" @click="userDetail">{{
+        <el-menu-item index="2-2" @click="userDetail" class="user-menu">{{
           userId
         }}</el-menu-item>
-        <el-menu-item index="2-1" @click="logout">로그아웃</el-menu-item>
+        <el-menu-item index="2-1" @click="logout" class="user-menu"
+          >로그아웃</el-menu-item
+        >
       </el-sub-menu>
     </el-menu>
 
@@ -36,7 +38,7 @@
 <script>
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import UserDetailView from '../views/UserDetailView.vue' // DetailView 컴포넌트 임포트
 
 export default {
@@ -48,7 +50,8 @@ export default {
     const authStore = useAuthStore() // Pinia store 가져오기
     const router = useRouter()
 
-    const userId = authStore.getUserId
+    const userId = computed(() => authStore.getUserId)
+
     const isUserDetailVisible = ref(false)
 
     // 프로필 상세 페이지로 이동
@@ -89,7 +92,6 @@ export default {
   height: 30px;
   margin-right: 8px; /* 텍스트와의 간격 */
   border-radius: 50%; /* 동그랗게 유지 */
-
   }
 .el-menu-demo {
   display: flex;
@@ -111,5 +113,8 @@ export default {
   max-height: 100px; /* Profile의 높이를 제한 */
   overflow: hidden; /* 넘치는 내용은 잘라냄 */
   margin-bottom: 10px; /* 프로필과 리스트 사이에 간격을 두어 레이아웃을 정리 */
+}
+.user-menu{
+  width: 200px;
 }
 </style>

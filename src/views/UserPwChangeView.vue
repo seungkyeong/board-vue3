@@ -87,7 +87,6 @@ export default {
   setup(props, { emit }) {
     const authStore = useAuthStore()
 
-    // const password = ref(props.password)
     const userPwChangeDialogVisible = ref(props.userPwChangeVisible)
     const userId = authStore.getUserId
 
@@ -130,27 +129,28 @@ export default {
           }).catch(() => {})
         } else {
           //사용자 상세 수정 수행 API 호출
-          boardAPI
-            .updateUserPw(form)
-            .then((response) => {
-              if (response.success) {
-                emit('update:password', form.newPassword)
-                form.newPassword = ''
-                form.currentPassword = ''
+          const response = await boardAPI.updateUserPw(form)
+          if (response.success) {
+            emit('update:password', form.newPassword)
+            form.newPassword = ''
+            form.currentPassword = ''
 
-                ElMessageBox.alert('저장되었습니다.', '', {
-                  confirmButtonText: '확인',
-                  type: 'success',
-                })
-                  .then(() => {
-                    closeDialog()
-                  })
-                  .catch(() => {
-                    closeDialog()
-                  })
-              }
+            ElMessageBox.alert('저장되었습니다.', '', {
+              confirmButtonText: '확인',
+              type: 'success',
             })
-            .catch((error) => console.error('Fail:', error))
+              .then(() => {
+                closeDialog()
+              })
+              .catch(() => {
+                closeDialog()
+              })
+          } else {
+            ElMessageBox.alert(response.message, '', {
+              confirmButtonText: '확인',
+              type: 'warning',
+            }).catch(() => {})
+          }
         }
       }
     }

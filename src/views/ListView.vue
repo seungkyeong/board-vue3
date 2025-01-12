@@ -106,7 +106,7 @@
           </div>
         </template>
         <template #default="scope">
-          {{ scope.row.createDate }}
+          {{ scope.row.formattedCreateDate }}
         </template>
       </el-table-column>
       <el-table-column label="수정일" show-overflow-tooltip>
@@ -127,12 +127,7 @@
           </div>
         </template>
         <template #default="scope">
-          {{ scope.row.modifyDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="조회수">
-        <template #default="scope">
-          {{ scope.row.view }}
+          {{ scope.row.formattedModifyDate }}
         </template>
       </el-table-column>
     </el-table>
@@ -161,7 +156,6 @@ export default {
   components: {
     UserProfile,
     Search,
-    // UserProfile,
   },
   setup() {
     //created 전에 동작함
@@ -201,19 +195,18 @@ export default {
     })
 
     //게시판 목록 로드
-    const getBoardList = (requestData) => {
-      boardAPI
-        .getBoardList(requestData)
-        .then((response) => {
-          allBoardList.value = response.data
-          paging()
-          console.log('allBoardList', allBoardList)
-        })
-        .catch((error) => console.error('Fail:', error))
+    const getBoardList = async (requestData) => {
+      const response = await boardAPI.getBoardList(requestData)
+      if (response.success) {
+        allBoardList.value = response.data
+        paging()
+        console.log('allBoardList', allBoardList)
+      }
     }
 
     //검색란 Enter시에 조건으로 검색
     const getSearchBoardList = () => {
+      console.log('searchFilters', searchFilters)
       const filter = Object.entries(searchFilters)
         .filter(([, value]) => value !== '') // 빈 문자열이 아닌 값만 남기기
         .reduce((acc, [key, value]) => {

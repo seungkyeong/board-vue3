@@ -164,18 +164,16 @@ export default {
     }
 
     //로드시 사용자 상세 조회
-    const getUserDetail = () => {
-      boardAPI
-        .userDetail({ id: userId })
-        .then((response) => {
-          form.id = response.data.id
-          form.name = response.data.name
-          form.phone = response.data.phone
-          form.email = response.data.email
-          form.sysNo = response.data.sysNo
-          form.password = response.data.password
-        })
-        .catch((error) => console.error('Fail:', error))
+    const getUserDetail = async () => {
+      const response = await boardAPI.userDetail({ id: userId })
+      if (response.success) {
+        form.id = response.data.id
+        form.name = response.data.name
+        form.phone = response.data.phone
+        form.email = response.data.email
+        form.sysNo = response.data.sysNo
+        form.password = response.data.password
+      }
     }
 
     //수정 버튼 클릭시 저장
@@ -185,26 +183,27 @@ export default {
         ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
           confirmButtonText: '확인',
           type: 'warning',
-        })
+        }).catch(() => {})
       } else {
         //사용자 상세 수정 수행 API 호출
-        boardAPI
-          .updateUserDetail(form)
-          .then((response) => {
-            if (response.success) {
-              ElMessageBox.alert('저장되었습니다.', '', {
-                confirmButtonText: '확인',
-                type: 'success',
-              })
-                .then(() => {
-                  closeDialog()
-                })
-                .catch(() => {
-                  closeDialog()
-                })
-            }
+        const response = await boardAPI.updateUserDetail(form)
+        if (response.success) {
+          ElMessageBox.alert('저장되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
           })
-          .catch((error) => console.error('Fail:', error))
+            .then(() => {
+              closeDialog()
+            })
+            .catch(() => {
+              closeDialog()
+            })
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'warning',
+          }).catch(() => {})
+        }
       }
     }
 

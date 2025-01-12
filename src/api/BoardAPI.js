@@ -1,12 +1,14 @@
 import axios from 'axios'
+// import { ElMessageBox } from 'element-plus'
 
 const BASE_URL = 'http://3.38.151.156:8080/api/board/'
-const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-
+// const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+// console.log('맨 처음 token', token)
 export default {
   /* 모든 게시물 조회 */
   getBoardList: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       console.log('token ' + token)
       const response = await fetch(BASE_URL + 'list', {
         method: 'POST',
@@ -16,9 +18,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -27,27 +26,22 @@ export default {
 
   /* 게시물 생성 */
   createBoard: async function (requestData) {
-    try {
-      const response = await fetch(BASE_URL + 'post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
+    const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+    const response = await fetch(BASE_URL + 'post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestData),
+    })
+    return await response.json()
   },
 
   /* Presigned URL 발급 */
   getPresignedURL: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'post/file', {
         method: 'POST',
         headers: {
@@ -91,6 +85,7 @@ export default {
   /* 게시물 상세 조회 */
   getBoardDetail: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'detail', {
         method: 'POST',
         headers: {
@@ -110,6 +105,7 @@ export default {
 
   /* 게시물 수정 */
   modifyBoard: function (title, content, userId, userName, imgPath) {
+    // const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
     //일단 뷰 뻈음
     return axios.post(BASE_URL + 'modify', {
       sysNo: '',
@@ -134,9 +130,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -162,6 +155,7 @@ export default {
   /* 아이디&비밀번호 찾기 */
   findIdPw: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'findIdPw', {
         method: 'POST',
         headers: {
@@ -170,9 +164,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -182,6 +173,7 @@ export default {
   /* 사용자 상세 보기 */
   userDetail: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'userDetail', {
         method: 'POST',
         headers: {
@@ -190,9 +182,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -202,6 +191,7 @@ export default {
   /* 사용자 상세 수정 */
   updateUserDetail: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'updateUserDetail', {
         method: 'POST',
         headers: {
@@ -210,9 +200,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -222,6 +209,7 @@ export default {
   /* 사용자 비밀번호 수정 */
   updateUserPw: async function (requestData) {
     try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'updateUserPw', {
         method: 'POST',
         headers: {
@@ -230,9 +218,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)

@@ -107,10 +107,6 @@ export default {
       } else {
         //파일 업로드 수행 API 호출
         if (fileData.has('files')) {
-          // 파일 이름만 추출
-          // const formDataFiles = fileData.getAll('files')
-          // const fileNames = formDataFiles.map((file) => file.name)
-
           //S3에서 PresignedURL 발급
           const presignedURLs = await boardAPI.getPresignedURL(fileData)
           //S3에 업로드
@@ -128,23 +124,25 @@ export default {
       }
 
       //저장 수행 API 호출
-      boardAPI
-        .createBoard(form)
-        .then((response) => {
-          if (response.success) {
-            ElMessageBox.alert('저장되었습니다.', '', {
-              confirmButtonText: '확인',
-              type: 'success',
-            })
-              .then(() => {
-                router.push({ path: '/board/list' })
-              })
-              .catch(() => {
-                router.push({ path: '/board/list' })
-              })
-          }
-        })
-        .catch((error) => console.error('Fail:', error))
+      const response = await boardAPI.createBoard(form)
+      try {
+        if (response.success) {
+          ElMessageBox.alert('저장되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
+          })
+          router.push({ path: '/board/list' })
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'warning',
+          })
+          router.push({ path: '/board/list' })
+        }
+      } catch (error) {
+        router.push({ path: '/board/list' })
+        console.error('Fail:', error)
+      }
     }
 
     //업로드 영역에 파일 추가시 제목을 imgPath에 넣음

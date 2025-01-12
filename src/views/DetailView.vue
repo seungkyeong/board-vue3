@@ -56,7 +56,7 @@
 
     <div class="button-container">
       <el-button type="primary" @click="modifyBoard">수정</el-button>
-      <el-button @click="goBack">이전</el-button>
+      <el-button @click="goBack">목록</el-button>
     </div>
 
     <!-- 이미지 미리보기 -->

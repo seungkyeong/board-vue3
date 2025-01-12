@@ -2,12 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 import CreateView from '../views/CreateView.vue'
 import ListView from '../views/ListView.vue'
 import DetailView from '../views/DetailView.vue'
-import ModifyView from '../views/ModifyView.vue'
 import HomeView from '../views/HomeView.vue'
 import SignUpView from '../views/SignUpView.vue'
 import FindPasswordView from '../views/FindPasswordView.vue'
 import FindIdView from '../views/FindIdView.vue'
 import UserDetailView from '../views/UserDetailView.vue'
+import ResultIdView from '../views/ResultIdView.vue'
+import ResultPwView from '../views/ResultPwView.vue'
 
 const routes = [
   {
@@ -31,11 +32,6 @@ const routes = [
     component: DetailView,
   },
   {
-    path: '/board/modify/:id',
-    name: 'ModifyView',
-    component: ModifyView,
-  },
-  {
     path: '/board/signup',
     name: 'SignUpView',
     component: SignUpView,
@@ -54,6 +50,16 @@ const routes = [
     path: '/board/userDetail',
     name: 'UserDetailView',
     component: UserDetailView,
+  },
+  {
+    path: '/board/resultId',
+    name: 'ResultIdView',
+    component: ResultIdView,
+  },
+  {
+    path: '/board/resultPw',
+    name: 'ResultPwView',
+    component: ResultPwView,
   },
 ]
 

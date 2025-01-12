@@ -71,29 +71,28 @@ export default {
         }).catch(() => {})
       } else {
         //로그인 수행 API 호출
-        boardAPI
-          .login(form)
-          .then((response) => {
-            if (response?.success) {
-              // 토큰 저장
-              console.log('response.data, login ' + response.data)
-              const token = response.data
+        const response = await boardAPI.login(form) // await 사용
+        if (response?.success) {
+          // 토큰 저장
+          console.log('response.data, login ' + response.data)
+          const token = response.data
 
-              const authStore = useAuthStore()
-              authStore.login(token)
+          const authStore = useAuthStore()
+          authStore.login(token)
+          localStorage.setItem('jwtToken', token)
+          console.log(
+            'Token 저장 후 localStorage: ',
+            localStorage.getItem('jwtToken')
+          )
 
-              // 리스트 페이지로 이동
-              router.push({ path: '/board/list' })
-            } else {
-              ElMessageBox.alert('로그인에 실패하였습니다.', '', {
-                confirmButtonText: '확인',
-                type: 'error',
-              }).catch(() => {})
-            }
-          })
-          .catch((error) => {
-            console.error('Fail:', error)
-          })
+          // 리스트 페이지로 이동
+          router.push({ path: '/board/list' })
+        } else {
+          ElMessageBox.alert('로그인에 실패하였습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'error',
+          }).catch(() => {})
+        }
       }
     }
 
@@ -125,10 +124,13 @@ export default {
 
 <style scoped>
 .container {
-    padding: 100px 600px 100px 600px;
+  padding: 100px 500px 100px 500px;
+  display: flex; /* 플렉스박스 사용 */
+  flex-direction: column; /* 세로 방향으로 정렬 */
+  align-items: center; /* 수평 중앙 정렬 */
 }
 .login-text{
-  font-size: 27px; /* 텍스트 크기 증가 */
+  font-size: 23px; /* 텍스트 크기 증가 */
   font-weight: bold; /* 텍스트 굵게 */
   text-align: center; /* 텍스트 중앙 정렬 */
   width: 100%; /* 중앙 정렬을 위해 width를 100%로 설정 */
@@ -139,5 +141,6 @@ export default {
   border-radius: 10px; /* 모서리 둥글게 */
   padding: 20px 20px 8px 20px; /* 내부 여백 */
   margin: 20px; /* 외부 여백 추가 */
+  width: 300px;
 }
 </style>

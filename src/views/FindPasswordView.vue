@@ -1,26 +1,41 @@
 <template>
   <div class="container">
+    <img
+      :src="require('@/assets/logo.png')"
+      alt="logo Image"
+      class="logo-image"
+      @click="toLogin"
+    />
     <el-text class="find-text"
       >비밀번호를 찾고자하는 아이디를 입력해주세요.</el-text
     >
-    <div class="form-container">
-      <el-form :model="form" label-width="auto" style="width: 100%">
-        <el-form-item>
-          <el-input v-model="form.id" placeholder="아이디" clearable autofocus>
-            <template #prefix>
-              <el-icon><User /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="signUp" style="width: 100%"
-            >비밀번호 찾기</el-button
-          >
-        </el-form-item>
-      </el-form>
+    <div class="form-section">
+      <div class="form-container">
+        <el-form :model="form" label-width="auto" style="width: 100%">
+          <el-form-item>
+            <el-input
+              v-model="form.id"
+              placeholder="아이디"
+              clearable
+              autofocus
+            >
+              <template #prefix>
+                <el-icon><User /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="signUp" style="width: 100%"
+              >비밀번호 찾기</el-button
+            >
+          </el-form-item>
+        </el-form>
+      </div>
+      <el-text class="id-text">아이디가 기억나지 않는다면? </el-text>
+      <el-button type="text" class="text" @click="findId"
+        >아이디 찾기</el-button
+      >
     </div>
-    <el-text class="id-text">아이디가 기억나지 않는다면? </el-text>
-    <el-button type="text" class="text" @click="findId">아이디 찾기</el-button>
   </div>
 </template>
 
@@ -49,24 +64,23 @@ export default {
         ElMessageBox.alert('아이디를 입력해주세요!', '', {
           confirmButtonText: '확인',
           type: 'warning',
-        })
+        }).catch(() => {})
       } else {
         //비밀번호 찾기 수행 API 호출
-        boardAPI
-          .findIdPw(form)
-          .then((response) => {
-            console.log(response)
-            if (response?.success) {
-              // router.push({ path: '/board/list' })
-              console.log(response.success)
-            } else {
-              ElMessageBox.alert(response.message, '', {
-                confirmButtonText: '확인',
-                type: 'error',
-              })
-            }
+        const response = await boardAPI.findIdPw(form)
+        if (response?.success) {
+          router.push({
+            path: '/board/resultPw',
+            query: {
+              result: response.data,
+            },
           })
-          .catch((error) => console.error('Fail:', error))
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'error',
+          }).catch(() => {})
+        }
       }
     }
 
@@ -75,10 +89,16 @@ export default {
       router.push({ path: '/board/findid' })
     }
 
+    //로고 클릭시
+    const toLogin = async () => {
+      router.push({ path: '/board/' })
+    }
+
     return {
       form,
       signUp,
       findId,
+      toLogin,
     }
   },
 }
@@ -86,10 +106,16 @@ export default {
 
 <style scoped>
 .container {
-    padding: 100px 600px 100px 600px;
+  padding: 20px 500px 100px 500px;
+  display: flex; /* 플렉스박스 사용 */
+  flex-direction: column; /* 세로 방향으로 정렬 */
+  align-items: center; /* 수평 중앙 정렬 */
+}
+.logo-image{
+  height: 180px;
 }
 .find-text{
-  font-size: 20px; /* 텍스트 크기 증가 */
+  font-size: 18px; /* 텍스트 크기 증가 */
   font-weight: bold; /* 텍스트 굵게 */
   text-align: center; /* 텍스트 중앙 정렬 */
   width: 100%; /* 중앙 정렬을 위해 width를 100%로 설정 */
@@ -100,5 +126,6 @@ export default {
   border-radius: 10px; /* 모서리 둥글게 */
   padding: 20px 20px 8px 20px; /* 내부 여백 */
   margin: 20px; /* 외부 여백 추가 */
+  width: 300px;
 }
 </style>
