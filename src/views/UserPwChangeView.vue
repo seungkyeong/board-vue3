@@ -111,6 +111,7 @@ export default {
     //수정 버튼 클릭시 저장
     const modify = async () => {
       console.log('form.currentPassword ' + form.currentPassword)
+      console.log('password.value ' + JSON.stringify(toRefs(props).password))
       console.log(
         'toRefs(props).password.value ' + toRefs(props).password.value
       )

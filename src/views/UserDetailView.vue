@@ -92,7 +92,7 @@
     @update:userPwChangeVisible="handleUserPwChangeClose"
     @update:password="updatePassword"
     :sysNo="form.sysNo"
-    :password="form.password"
+    :password="password"
   />
 </template>
 
@@ -122,13 +122,14 @@ export default {
     const authStore = useAuthStore()
     const isUserPwChangeVisible = ref(false)
 
+    let password = ref('')
+
     const form = reactive({
       id: '',
       name: '',
       phone: '',
       email: '',
       sysNo: '',
-      password: '',
     })
 
     const userDetailDialogVisible = ref(props.userDetailVisible)
@@ -160,7 +161,7 @@ export default {
     }
 
     const updatePassword = (value) => {
-      form.password = value
+      password.value = value
     }
 
     //로드시 사용자 상세 조회
@@ -172,7 +173,7 @@ export default {
         form.phone = response.data.phone
         form.email = response.data.email
         form.sysNo = response.data.sysNo
-        form.password = response.data.password
+        password.value = response.data.password
       }
     }
 
@@ -218,6 +219,7 @@ export default {
       getUserDetail,
       isUserPwChangeVisible,
       updatePassword,
+      password,
     }
   },
 }
