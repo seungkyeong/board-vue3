@@ -27,15 +27,19 @@ export default {
   /* 게시물 생성 */
   createBoard: async function (requestData) {
     const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-    const response = await fetch(BASE_URL + 'post', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestData),
-    })
-    return await response.json()
+    try {
+      const response = await fetch(BASE_URL + 'post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
   },
 
   /* Presigned URL 발급 */

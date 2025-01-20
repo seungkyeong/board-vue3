@@ -103,34 +103,38 @@ export default {
       userSysNo: '',
     })
 
-    const getBoardDetail = () => {
-      boardAPI
-        .getBoardDetail({
-          searchList: { sysNo: sysNoParam },
-          pageSize: 10,
-          pageIndex: 0,
-        })
-        .then((response) => {
-          //s3에서 가져오기
-          if (
-            response.data.imgPath.length > 0 &&
-            response.data.imgPath[0] != ''
-          ) {
-            const prefix = 'https://demofille.s3.ap-northeast-2.amazonaws.com/'
-            for (let i = 0; i < response.data.imgPath.length; i++) {
-              form.imgPath.push(prefix + response.data.imgPath[i])
-            }
-            updateFileList()
-          }
+    const getBoardDetail = async () => {
+      const response = await boardAPI.getBoardDetail({
+        searchList: { sysNo: sysNoParam },
+        pageSize: 10,
+        pageIndex: 0,
+      })
 
-          //이미지 파일 이름 배열로 저장
-          form.sysNo = response.data.sysNo
-          form.title = response.data.title
-          form.content = response.data.content
-          form.userId = response.data.userId
-          form.userSysNo = response.data.userSysNo
-        })
-        .catch((error) => console.error('Fail:', error))
+      if (response.success) {
+        //s3에서 가져오기
+        if (
+          response.data.imgPath.length > 0 &&
+          response.data.imgPath[0] != ''
+        ) {
+          const prefix = 'https://demofille.s3.ap-northeast-2.amazonaws.com/'
+          for (let i = 0; i < response.data.imgPath.length; i++) {
+            form.imgPath.push(prefix + response.data.imgPath[i])
+          }
+          updateFileList()
+        }
+
+        //이미지 파일 이름 배열로 저장
+        form.sysNo = response.data.sysNo
+        form.title = response.data.title
+        form.content = response.data.content
+        form.userId = response.data.userId
+        form.userSysNo = response.data.userSysNo
+      } else {
+        ElMessageBox.alert(response.message, '', {
+          confirmButtonText: '확인',
+          type: 'error',
+        }).catch(() => {})
+      }
     }
 
     //로드시 게시물 조회
@@ -154,6 +158,7 @@ export default {
         // 기존 이미지 삭제 시 deletedImages에 추가
         deletedImages.value.push(file.url)
         form.imgPath = form.imgPath.filter((img) => img !== file.url)
+        console.log('기존 img 삭제시 form.imgPath', form.imgPath)
       } else {
         const newFileData = new FormData()
         for (const [key, value] of fileData.entries()) {
@@ -182,8 +187,7 @@ export default {
           uid,
         }
       })
-      console.log('updatedList ' + JSON.stringify(updatedList))
-      console.log('fileList.value ' + JSON.stringify(fileList.value))
+      // console.log('updatedList ' + JSON.stringify(updatedList))
       fileList.value = [...updatedList]
     }
 
@@ -222,29 +226,37 @@ export default {
           if (deletedImages.value.length > 0) {
             console.log('deletedImages ' + JSON.stringify(deletedImages.value))
           }
+
+          form.imgPath = [
+            ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
+          ]
         }
 
         //저장 수행 API 호출
-        boardAPI
-          .createBoard(form)
-          .then((response) => {
-            if (response.success) {
-              ElMessageBox.alert('저장되었습니다.', '', {
-                confirmButtonText: '확인',
-                type: 'success',
-              })
-                .then(() => {
-                  form.imgPath = []
-                  deletedImages = []
-                  fileList = []
-                  fileData = new FormData()
-                  getBoardDetail()
-                  editToggle.value = true
-                })
-                .catch(() => {})
-            }
+        const response = await boardAPI.createBoard(form)
+
+        if (response.success) {
+          ElMessageBox.alert('저장되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
           })
-          .catch((error) => console.error('Fail:', error))
+            .then(() => {
+              form.imgPath = []
+              deletedImages = []
+              fileList.value = []
+              fileData = new FormData()
+              getBoardDetail()
+              editToggle.value = true
+
+              console.log('create후 form.imagepath', form.imgPath)
+            })
+            .catch(() => {})
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'error',
+          }).catch(() => {})
+        }
       } else {
         //사용자가 작성자이면 수정
         if (form.userId == userId) {
