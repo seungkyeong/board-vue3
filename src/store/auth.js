@@ -47,6 +47,13 @@ export const useAuthStore = defineStore('auth', {
         }
       }
     },
+
+    // 초기화 함수
+    initialize() {
+      if (this.token) {
+        this.decodeToken(this.token) // 토큰을 디코딩하여 상태 복구
+      }
+    },
   },
 
   getters: {

@@ -54,6 +54,10 @@
       </el-form-item>
     </el-form>
 
+    <div class="like-container">
+      <el-button type="primary" @click="addLikeCount">👍 좋아요</el-button>
+    </div>
+
     <div class="button-container">
       <el-button type="primary" @click="modifyBoard">수정</el-button>
       <el-button @click="goBack">목록</el-button>
@@ -272,6 +276,11 @@ export default {
       }
     }
 
+    //좋아요 버튼 클릭시 Redis 좋아요 Count 증가
+    const addLikeCount = async () => {
+      await boardAPI.addLikeCount({ sysNo: form.sysNo })
+    }
+
     return {
       goBack,
       form,
@@ -287,6 +296,7 @@ export default {
       previewImage,
       dialogVisible,
       deletedImages,
+      addLikeCount,
     }
   },
 }
@@ -295,6 +305,15 @@ export default {
 <style scoped>
 .container {
     padding: 30px 400px 30px 400px;
+}
+.like-container .el-button{
+  display: flex;
+  justify-content: flex-start;
+  border-radius: 50px; /* 버튼을 둥글게 만듦 */
+  padding: 10px 20px; /* 적당한 내부 여백 */
+  background-color: white;
+  color: rgb(149, 148, 148);
+  border-color: rgb(149, 148, 148);
 }
 .button-container {
     display: flex; 

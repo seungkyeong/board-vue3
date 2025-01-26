@@ -98,9 +98,6 @@ export default {
         },
         body: JSON.stringify(requestData),
       })
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
@@ -215,6 +212,42 @@ export default {
     try {
       const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'updateUserPw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* View Count Redis에 적용 */
+  addViewCount: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const response = await fetch(BASE_URL + 'count', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* Like Count Redis에 적용 */
+  addLikeCount: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const response = await fetch(BASE_URL + 'likeCount', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

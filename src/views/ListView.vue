@@ -10,132 +10,139 @@
       <el-button type="primary" @click="goWritePage">글쓰기 </el-button>
     </div>
     <!-- 게시판 리스트 테이블-->
-    <el-table
-      :data="boardList"
-      border
-      style="width: 100%"
-      @row-click="goToDetailPage"
-    >
-      <el-table-column
-        label="sysNo"
-        prop="sysNo"
-        width="0"
-        v-if="hiddenFlag"
-      ></el-table-column>
-      <el-table-column label="제목" show-overflow-tooltip>
-        <template #header>
-          <div class="header-container">
-            제목
-            <el-icon @click="toggleSearch('title')" class="search-icon">
-              <Search />
-            </el-icon>
-          </div>
-          <el-input
-            v-if="visibleSearch.title"
-            v-model="searchFilters.title"
-            @keydown.enter="getSearchBoardList"
-          />
-        </template>
-        <template #default="scope">
-          {{ scope.row.title }}
-        </template>
-      </el-table-column>
-      <el-table-column label="내용" show-overflow-tooltip>
-        <template #header>
-          <div class="header-container">
-            내용
-            <el-icon @click="toggleSearch('content')" class="search-icon">
-              <Search />
-            </el-icon>
-          </div>
-          <el-input
-            v-if="visibleSearch.content"
-            v-model="searchFilters.content"
-            @keydown.enter="getSearchBoardList"
-          />
-        </template>
-        <template #default="scope">
-          {{ scope.row.content }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="userSysNo"
-        prop="userSysNo"
-        width="0"
-        v-if="hiddenFlag"
-      ></el-table-column>
-      <el-table-column label="작성자" show-overflow-tooltip>
-        <template #header>
-          <div class="header-container">
-            작성자
-            <el-icon @click="toggleSearch('userId')" class="search-icon">
-              <Search />
-            </el-icon>
-          </div>
-          <el-input
-            v-if="visibleSearch.userId"
-            v-model="searchFilters.userId"
-            @keydown.enter="getSearchBoardList"
-          />
-        </template>
-        <template #default="scope">
-          {{ scope.row.userId }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="imgPath"
-        prop="imgPath"
-        width="0"
-        v-if="hiddenFlag"
-      ></el-table-column>
-      <el-table-column label="작성일" show-overflow-tooltip>
-        <template #header>
-          <div class="header-container">
-            작성일
-            <el-icon @click="toggleSearch('createDate')" class="search-icon">
-              <Search />
-            </el-icon>
-          </div>
-          <div class="datepicker-container">
-            <el-date-picker
-              v-model="searchFilters.createDate"
-              v-if="visibleSearch.createDate"
+    <div class="table-containter">
+      <el-table
+        :data="boardList"
+        border
+        style="width: 100%"
+        @row-click="goToDetailPage"
+      >
+        <el-table-column
+          label="sysNo"
+          prop="sysNo"
+          width="0"
+          v-if="hiddenFlag"
+        ></el-table-column>
+        <el-table-column label="제목" show-overflow-tooltip>
+          <template #header>
+            <div class="header-container">
+              제목
+              <el-icon @click="toggleSearch('title')" class="search-icon">
+                <Search />
+              </el-icon>
+            </div>
+            <el-input
+              v-if="visibleSearch.title"
+              v-model="searchFilters.title"
               @keydown.enter="getSearchBoardList"
-              type="date"
             />
-          </div>
-        </template>
-        <template #default="scope">
-          {{ scope.row.formattedCreateDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="수정일" show-overflow-tooltip>
-        <template #header>
-          <div class="header-container">
-            수정일
-            <el-icon @click="toggleSearch('modifyDate')" class="search-icon">
-              <Search />
-            </el-icon>
-          </div>
-          <div class="datepicker-container">
-            <el-date-picker
-              v-model="searchFilters.modifyDate"
-              v-if="visibleSearch.modifyDate"
+          </template>
+          <template #default="scope">
+            {{ scope.row.title }}
+          </template>
+        </el-table-column>
+        <el-table-column label="내용" show-overflow-tooltip>
+          <template #header>
+            <div class="header-container">
+              내용
+              <el-icon @click="toggleSearch('content')" class="search-icon">
+                <Search />
+              </el-icon>
+            </div>
+            <el-input
+              v-if="visibleSearch.content"
+              v-model="searchFilters.content"
               @keydown.enter="getSearchBoardList"
-              type="date"
             />
-          </div>
-        </template>
-        <template #default="scope">
-          {{ scope.row.formattedModifyDate }}
-        </template>
-      </el-table-column>
-    </el-table>
+          </template>
+          <template #default="scope">
+            {{ scope.row.content }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="userSysNo"
+          prop="userSysNo"
+          width="0"
+          v-if="hiddenFlag"
+        ></el-table-column>
+        <el-table-column label="작성자" show-overflow-tooltip>
+          <template #header>
+            <div class="header-container">
+              작성자
+              <el-icon @click="toggleSearch('userId')" class="search-icon">
+                <Search />
+              </el-icon>
+            </div>
+            <el-input
+              v-if="visibleSearch.userId"
+              v-model="searchFilters.userId"
+              @keydown.enter="getSearchBoardList"
+            />
+          </template>
+          <template #default="scope">
+            {{ scope.row.userId }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="imgPath"
+          prop="imgPath"
+          width="0"
+          v-if="hiddenFlag"
+        ></el-table-column>
+        <el-table-column label="작성일" show-overflow-tooltip>
+          <template #header>
+            <div class="header-container">
+              작성일
+              <el-icon @click="toggleSearch('createDate')" class="search-icon">
+                <Search />
+              </el-icon>
+            </div>
+            <div class="datepicker-container">
+              <el-date-picker
+                v-model="searchFilters.createDate"
+                v-if="visibleSearch.createDate"
+                @keydown.enter="getSearchBoardList"
+                type="date"
+              />
+            </div>
+          </template>
+          <template #default="scope">
+            {{ scope.row.formattedCreateDate }}
+          </template>
+        </el-table-column>
+        <el-table-column label="수정일" show-overflow-tooltip>
+          <template #header>
+            <div class="header-container">
+              수정일
+              <el-icon @click="toggleSearch('modifyDate')" class="search-icon">
+                <Search />
+              </el-icon>
+            </div>
+            <div class="datepicker-container">
+              <el-date-picker
+                v-model="searchFilters.modifyDate"
+                v-if="visibleSearch.modifyDate"
+                @keydown.enter="getSearchBoardList"
+                type="date"
+              />
+            </div>
+          </template>
+          <template #default="scope">
+            {{ scope.row.formattedModifyDate }}
+          </template>
+        </el-table-column>
+        <el-table-column label="조회수" show-overflow-tooltip>
+          <template #default="scope">
+            {{ scope.row.view }}
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
     <!-- 페이징 컴포넌트 -->
     <div class="paging-container">
       <el-pagination
-        :total="allBoardList.length"
+        :total="allBoardListCount"
         :current-page="currentPage"
         :page-size="pageSize"
         @current-change="chagePaging"
@@ -150,7 +157,8 @@ import UserProfile from '../components/Profile'
 import { useRouter } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue' //ref:DOM 요소의 상태 변화를 감지할 수 있는 객체 //computed
 import { Search } from '@element-plus/icons-vue'
-import boardAPI from '../api/BoardAPI' //@: 특정 경로, 보통 src를 뜻함.
+import boardAPI from '../api/BoardAPI'
+// import Cookies from 'js-cookie'
 
 export default {
   components: {
@@ -158,11 +166,10 @@ export default {
     Search,
   },
   setup() {
-    //created 전에 동작함
     const router = useRouter()
 
     const hiddenFlag = ref(false) //false로 설정
-    const allBoardList = ref([]) //전체 게시판 데이터
+    const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
     const currentPage = ref(1)
     const pageSize = 10
@@ -198,9 +205,8 @@ export default {
     const getBoardList = async (requestData) => {
       const response = await boardAPI.getBoardList(requestData)
       if (response.success) {
-        allBoardList.value = response.data
-        paging()
-        console.log('allBoardList', allBoardList)
+        allBoardListCount.value = response.data[0] //게시판 목록 전체 개수
+        boardList.value = response.data[1] //게시판 목록 조회
       }
     }
 
@@ -228,14 +234,7 @@ export default {
     // 페이지 변경 시 currentPage 업데이트
     const chagePaging = (page) => {
       currentPage.value = page
-      paging()
-    }
-
-    //페이징 함수
-    const paging = () => {
-      const start = (currentPage.value - 1) * pageSize
-      const end = start + pageSize
-      boardList.value = allBoardList.value.slice(start, end)
+      getSearchBoardList()
     }
 
     //검색 아이콘 눌렀을 때 inputbox 렌더링 하는 함수(true,false 토글)
@@ -249,7 +248,8 @@ export default {
     }
 
     //행 클릭시 상세 페에지로 이동
-    const goToDetailPage = (row) => {
+    const goToDetailPage = async (row) => {
+      await boardAPI.addViewCount({ sysNo: row.sysNo })
       router.push({ path: `/board/detail/${row.sysNo}` })
     }
 
@@ -260,14 +260,13 @@ export default {
       currentPage,
       hiddenFlag,
       pageSize,
-      allBoardList,
+      allBoardListCount,
       toggleSearch,
       goWritePage,
       goToDetailPage,
       getBoardList,
       getSearchBoardList,
       chagePaging,
-      paging,
     }
   },
 }
@@ -285,6 +284,15 @@ export default {
 .header-container {
   display: flex;
   justify-content: space-between;
+}
+.table-container {
+  height: 450px;
+}
+.el-table__inner-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
 }
 .paging-container {
   display: flex;
