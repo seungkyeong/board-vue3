@@ -9,6 +9,7 @@ import FindIdView from '../views/FindIdView.vue'
 import UserDetailView from '../views/UserDetailView.vue'
 import ResultIdView from '../views/ResultIdView.vue'
 import ResultPwView from '../views/ResultPwView.vue'
+import LikeTopListView from '../views/LikeTopListView.vue'
 
 const routes = [
   {
@@ -20,6 +21,11 @@ const routes = [
     path: '/board/list',
     name: 'ListView',
     component: ListView,
+  },
+  {
+    path: '/board/likeTopList',
+    name: 'LikeTopListView',
+    component: LikeTopListView,
   },
   {
     path: '/board/post', ///:id

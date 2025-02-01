@@ -51,12 +51,11 @@
             </div>
           </template>
         </el-upload>
+        <div class="like-container" v-if="editToggle">
+          <el-button type="primary" @click="addLikeCount">👍 좋아요</el-button>
+        </div>
       </el-form-item>
     </el-form>
-
-    <div class="like-container">
-      <el-button type="primary" @click="addLikeCount">👍 좋아요</el-button>
-    </div>
 
     <div class="button-container">
       <el-button type="primary" @click="modifyBoard">수정</el-button>
@@ -67,6 +66,94 @@
     <el-dialog v-model="dialogVisible" width="50%">
       <img :src="previewImage" alt="미리보기" style="width: 100%" />
     </el-dialog>
+
+    <div class="comment-container">
+      <div class="createComment-container">
+        <el-input
+          v-model="newComment.comment"
+          type="textarea"
+          :rows="3"
+          resize="none"
+          placeholder="댓글을 입력해주세요."
+        />
+        <el-button type="primary" @click="createComment(null)">등록</el-button>
+      </div>
+
+      <div
+        v-for="comment in commentList"
+        :key="comment.sysNo"
+        class="comment-item"
+        style="padding-top: 30px"
+      >
+        <!-- 프로필 -->
+        <div class="comment-item-user">
+          <el-avatar
+            class="profile-img"
+            :size="40"
+            :src="require('@/assets/profile.png')"
+          />
+          <div class="comment-item-user-idDate">
+            <span class="comment-userId" style="font-size: 17px">{{
+              comment.userId
+            }}</span>
+            <span class="comment-createDate">{{
+              comment.formattedCreateDate
+            }}</span>
+          </div>
+        </div>
+        <!-- 댓글 내용 -->
+        <p class="comment-text">{{ comment.comment }}</p>
+        <!-- 답글 버튼 -->
+        <el-button
+          class="comment-replyList"
+          type="primary"
+          @click="showReplyList(comment)"
+          >답글 {{ comment.replies.length }}</el-button
+        >
+
+        <!-- 대댓글 리스트 -->
+        <div v-if="comment.repliesVisible">
+          <div
+            v-for="reply in comment.replies"
+            :key="reply.sysNo"
+            class="replies"
+            style="padding-top: 10px"
+          >
+            <!-- 프로필 -->
+            <div class="comment-item-user">
+              <el-avatar
+                class="profile-img"
+                :size="40"
+                :src="require('@/assets/profile.png')"
+              />
+              <div class="comment-item-user-idDate">
+                <span class="comment-userId" style="font-size: 17px">{{
+                  reply.userId
+                }}</span>
+                <span class="comment-createDate">{{
+                  reply.formattedCreateDate
+                }}</span>
+              </div>
+            </div>
+            <!-- 댓글 내용 -->
+            <p class="comment-text">{{ reply.comment }}</p>
+          </div>
+
+          <div class="createReply-container">
+            <el-input
+              v-model="replyInputs[comment.sysNo]"
+              type="textarea"
+              :rows="3"
+              resize="none"
+              placeholder="댓글을 입력해주세요."
+            />
+            <el-button type="primary" @click="createComment(comment)"
+              >등록</el-button
+            >
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -96,7 +183,8 @@ export default {
     const previewImage = ref('')
     const dialogVisible = ref(false)
     let fileList = ref([])
-    // let imgPath = []
+    const commentList = ref([])
+    const replyInputs = reactive({})
 
     const form = reactive({
       sysNo: '',
@@ -105,6 +193,23 @@ export default {
       imgPath: [],
       userId: '',
       userSysNo: '',
+    })
+
+    const newComment = reactive({
+      sysNo: '',
+      boardSysNo: '', //미리 세팅되어야 함
+      comment: '',
+      userId: userId, //미리 세팅되어야 함
+      userSysNo: 'asdf', //미리 세팅되어야 함, login할 때 jwtToken에 userSysNo도 있어야 함
+    })
+
+    const newReply = reactive({
+      sysNo: '',
+      parSysNo: '',
+      boardSysNo: '', //미리 세팅되어야 함
+      comment: '',
+      userId: userId, //미리 세팅되어야 함
+      userSysNo: 'asdf', //미리 세팅되어야 함, login할 때 jwtToken에 userSysNo도 있어야 함
     })
 
     const getBoardDetail = async () => {
@@ -117,22 +222,33 @@ export default {
       if (response.success) {
         //s3에서 가져오기
         if (
-          response.data.imgPath.length > 0 &&
-          response.data.imgPath[0] != ''
+          response.data[0].imgPath.length > 0 &&
+          response.data[0].imgPath[0] != ''
         ) {
           const prefix = 'https://demofille.s3.ap-northeast-2.amazonaws.com/'
-          for (let i = 0; i < response.data.imgPath.length; i++) {
-            form.imgPath.push(prefix + response.data.imgPath[i])
+          for (let i = 0; i < response.data[0].imgPath.length; i++) {
+            form.imgPath.push(prefix + response.data[0].imgPath[i])
           }
           updateFileList()
         }
 
+        //게시물 상세 세팅
         //이미지 파일 이름 배열로 저장
-        form.sysNo = response.data.sysNo
-        form.title = response.data.title
-        form.content = response.data.content
-        form.userId = response.data.userId
-        form.userSysNo = response.data.userSysNo
+        form.sysNo = response.data[0].sysNo
+        form.title = response.data[0].title
+        form.content = response.data[0].content
+        form.userId = response.data[0].userId
+        form.userSysNo = response.data[0].userSysNo
+
+        //새로운 댓글을 위한 세팅
+        newComment.boardSysNo = response.data[0].sysNo
+        newReply.boardSysNo = response.data[0].sysNo
+
+        //댓글 리스트 세팅
+        commentList.value = response.data[1].map((comment) => ({
+          ...comment,
+          repliesVisible: false, // 초기에는 대댓글 숨김
+        }))
       } else {
         ElMessageBox.alert(response.message, '', {
           confirmButtonText: '확인',
@@ -278,7 +394,46 @@ export default {
 
     //좋아요 버튼 클릭시 Redis 좋아요 Count 증가
     const addLikeCount = async () => {
-      await boardAPI.addLikeCount({ sysNo: form.sysNo })
+      await boardAPI.addViewCount({ type: 'like', sysNo: form.sysNo })
+    }
+
+    //댓글 등록 버튼 클릭시 댓글 저장
+    const createComment = async (comment = null) => {
+      let response
+      if (comment != null) {
+        console.log('comment != null: ', comment)
+        newReply.parSysNo = comment.sysNo
+        newReply.boardSysNo = form.sysNo
+        newReply.comment = replyInputs[comment.sysNo] || '' // 해당 댓글의 입력값 사용
+
+        console.log('newReply.parSysNo: ', newReply.parSysNo)
+        response = await boardAPI.createComment(newReply)
+      } else {
+        response = await boardAPI.createComment(newComment)
+      }
+
+      if (response.success) {
+        ElMessageBox.alert('댓글이 등록되었습니다.', '', {
+          confirmButtonText: '확인',
+          type: 'success',
+        })
+          .then(() => {
+            newComment.comment = ''
+            Object.keys(replyInputs).forEach((key) => (replyInputs[key] = '')) // 모든 대댓글 입력창 초기화
+            newReply.comment = ''
+            getBoardDetail()
+          })
+          .catch(() => {})
+      } else {
+        ElMessageBox.alert(response.message, '', {
+          confirmButtonText: '확인',
+          type: 'error',
+        }).catch(() => {})
+      }
+    }
+
+    const showReplyList = (comment) => {
+      comment.repliesVisible = !comment.repliesVisible // 토글 기능
     }
 
     return {
@@ -297,6 +452,12 @@ export default {
       dialogVisible,
       deletedImages,
       addLikeCount,
+      newComment,
+      createComment,
+      commentList,
+      showReplyList,
+      newReply,
+      replyInputs,
     }
   },
 }
@@ -331,5 +492,61 @@ export default {
   max-width: 100%; /* 이미지가 컨테이너를 벗어나지 않도록 제한 */
   height: auto; /* 이미지 비율을 유지하면서 크기를 조정 */
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* 약간의 그림자 추가 */
+}
+::v-deep(.el-form-item__label) {
+  font-weight: bold; /* 라벨 텍스트 굵게 */
+}
+.comment-container{
+  border-top: 2px solid grey;
+  padding-top: 20px;
+}
+.createComment-container{
+  display: flex; 
+  gap: 10px; /* textarea와 버튼 사이 간격 조절 */
+}
+.comment-item{
+  border-bottom: 1px solid #c8c8c8;
+}
+.comment-item-user{
+  display: flex; 
+  gap: 10px; /* textarea와 버튼 사이 간격 조절 */
+  margin-top: 20px;
+}
+.comment-item-user-idDate{
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.comment-createDate{
+  color: grey;
+  font-size: 13px;
+  padding-top:5px;
+}
+.comment-text {
+  text-align: left; /* 왼쪽 정렬 */
+  margin-left: 45px; /* 프로필 이미지 크기 + 여백 */
+}
+.comment-replyList{
+  display: flex; 
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  align-items: center; /* 세로 중앙 정렬 */
+  background-color: white;
+  color: grey;
+  border-color: grey;
+  margin-left: 45px; /* 프로필 사진 크기 + 여백과 맞추기 */
+  margin-bottom: 20px;
+}
+.replies {
+  margin-left: 50px; /* 루트 댓글보다 50px 들여쓰기 */
+  border-top: 1px solid #c8c8c8;
+  padding-left: 10px; /* 내용과 경계선 사이 여백 */
+}
+.createReply-container{
+  display: flex; 
+  gap: 10px; 
+  margin-left: 50px;
+  border-top: 2px solid #c8c8c8;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 </style>

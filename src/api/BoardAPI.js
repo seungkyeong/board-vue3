@@ -229,7 +229,7 @@ export default {
   addViewCount: async function (requestData) {
     try {
       const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-      const response = await fetch(BASE_URL + 'count', {
+      const response = await fetch(BASE_URL + 'addCount', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -248,6 +248,24 @@ export default {
     try {
       const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
       const response = await fetch(BASE_URL + 'likeCount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* 댓글 생성 */
+  createComment: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const response = await fetch(BASE_URL + 'post/comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
