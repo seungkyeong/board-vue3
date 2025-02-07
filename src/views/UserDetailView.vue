@@ -134,6 +134,7 @@ export default {
 
     const userDetailDialogVisible = ref(props.userDetailVisible)
     const userId = authStore.getUserId
+    const userSysNo = authStore.getUserSysNo
 
     // props.visible 변경 시 반영
     watch(
@@ -166,7 +167,10 @@ export default {
 
     //로드시 사용자 상세 조회
     const getUserDetail = async () => {
-      const response = await boardAPI.userDetail({ id: userId })
+      const response = await boardAPI.userDetail({
+        id: userId,
+        sysNo: userSysNo,
+      })
       if (response.success) {
         form.id = response.data.id
         form.name = response.data.name

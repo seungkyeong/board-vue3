@@ -47,11 +47,10 @@ export default {
     })
 
     const result = route.query.result
-    console.log('result', result)
 
     //로그인하기 버튼 클릭시 저장
     const toLogin = async () => {
-      router.push({ path: '/board/' })
+      router.push({ path: '/' })
     }
 
     //비밀번호 찾기 버튼 클릭시 저장

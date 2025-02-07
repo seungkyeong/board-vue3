@@ -91,7 +91,7 @@ export default {
 
     //로고 클릭시
     const toLogin = async () => {
-      router.push({ path: '/board/' })
+      router.push({ path: '/' })
     }
 
     return {

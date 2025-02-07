@@ -3,18 +3,17 @@ import axios from 'axios'
 
 const BASE_URL = 'http://3.38.151.156:8080/api/board/'
 // const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-// console.log('맨 처음 token', token)
+
 export default {
   /* 모든 게시물 조회 */
   getBoardList: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-      console.log('token ' + token)
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'list', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
@@ -26,7 +25,7 @@ export default {
 
   /* 게시물 생성 */
   createBoard: async function (requestData) {
-    const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+    const token = localStorage.getItem('jwtToken')
     try {
       const response = await fetch(BASE_URL + 'post', {
         method: 'POST',
@@ -45,11 +44,11 @@ export default {
   /* Presigned URL 발급 */
   getPresignedURL: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-      const response = await fetch(BASE_URL + 'post/file', {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'post/fileUpload', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: requestData, // Presigned URL 요청에 필요한 데이터
       })
@@ -71,7 +70,7 @@ export default {
         method: 'PUT',
         body: file, // 업로드할 파일
         headers: {
-          'Content-Type': file.type, // 파일의 타입을 Content-Type 헤더로 설정
+          'Content-Type': file.type,
         },
         mode: 'cors',
       })
@@ -89,7 +88,7 @@ export default {
   /* 게시물 상세 조회 */
   getBoardDetail: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'detail', {
         method: 'POST',
         headers: {
@@ -102,23 +101,6 @@ export default {
     } catch (error) {
       console.error('Fetch error:', error)
     }
-  },
-
-  /* 게시물 수정 */
-  modifyBoard: function (title, content, userId, userName, imgPath) {
-    // const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-    //일단 뷰 뻈음
-    return axios.post(BASE_URL + 'modify', {
-      sysNo: '',
-      title: title,
-      content: content,
-      userId: userId,
-      userName: userName,
-      imgPath: imgPath,
-      createDate: '',
-      modifyDate: '',
-      view: 0,
-    })
   },
 
   /* 회원가입 */
@@ -156,7 +138,7 @@ export default {
   /* 아이디&비밀번호 찾기 */
   findIdPw: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'findIdPw', {
         method: 'POST',
         headers: {
@@ -174,12 +156,12 @@ export default {
   /* 사용자 상세 보기 */
   userDetail: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'userDetail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
@@ -192,12 +174,12 @@ export default {
   /* 사용자 상세 수정 */
   updateUserDetail: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'updateUserDetail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
@@ -210,12 +192,12 @@ export default {
   /* 사용자 비밀번호 수정 */
   updateUserPw: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'updateUserPw', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
@@ -226,32 +208,14 @@ export default {
   },
 
   /* View Count Redis에 적용 */
-  addViewCount: async function (requestData) {
+  updateCount: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-      const response = await fetch(BASE_URL + 'addCount', {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'updateCount', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
-
-  /* Like Count Redis에 적용 */
-  addLikeCount: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
-      const response = await fetch(BASE_URL + 'likeCount', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
@@ -264,18 +228,54 @@ export default {
   /* 댓글 생성 */
   createComment: async function (requestData) {
     try {
-      const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
+      const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'post/comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       })
       return await response.json()
     } catch (error) {
       console.error('Fetch error:', error)
+    }
+  },
+
+  /* S3 파일 삭제 */
+  deleteFiles: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'post/fileDelete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error: ', error)
+    }
+  },
+
+  /* 게시물 리스트 삭제 */
+  deleteBoardList: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'post/boardDelete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error: ', error)
     }
   },
 }

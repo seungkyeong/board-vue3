@@ -3,7 +3,25 @@
   <UserProfile />
 
   <div class="container">
-    <el-form :model="form" label-width="auto" style="width: 100%">
+    <div class="detail-user" v-if="editToggle">
+      <el-avatar
+        class="profile-img"
+        :size="40"
+        :src="require('@/assets/profile.png')"
+      />
+      <div class="detail-user-idDate">
+        <span class="comment-userId" style="font-size: 17px">{{
+          form.userId
+        }}</span>
+        <span class="comment-createDate">{{ form.createDate }}</span>
+      </div>
+    </div>
+
+    <el-form
+      :model="form"
+      label-width="auto"
+      style="width: 100%; padding-top: 20px"
+    >
       <el-form-item label="제목">
         <el-input v-model="form.title" :disabled="editToggle" />
       </el-form-item>
@@ -51,8 +69,12 @@
             </div>
           </template>
         </el-upload>
+      </el-form-item>
+      <el-form-item label="" class="like-wrapper">
         <div class="like-container" v-if="editToggle">
-          <el-button type="primary" @click="addLikeCount">👍 좋아요</el-button>
+          <el-button type="primary" @click="toggleLikeBtn" :style="buttonStyle"
+            >👍 좋아요</el-button
+          >
         </div>
       </el-form-item>
     </el-form>
@@ -67,7 +89,7 @@
       <img :src="previewImage" alt="미리보기" style="width: 100%" />
     </el-dialog>
 
-    <div class="comment-container">
+    <div class="comment-container" v-if="editToggle">
       <div class="createComment-container">
         <el-input
           v-model="newComment.comment"
@@ -159,7 +181,7 @@
 
 <script>
 import UserProfile from '../components/Profile'
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import boardAPI from '../api/BoardAPI'
@@ -177,6 +199,7 @@ export default {
     const authStore = useAuthStore()
     const sysNoParam = route.params.sysNo // URL 경로에서 sysNo를 가져옴
     const userId = authStore.getUserId
+    const userSysNo = authStore.getSysNo
     const editToggle = ref(true)
     let deletedImages = ref([]) // 삭제된 기존 이미지 추적
     let fileData = new FormData()
@@ -185,7 +208,9 @@ export default {
     let fileList = ref([])
     const commentList = ref([])
     const replyInputs = reactive({})
+    const isLiked = ref(false) // 좋아요 상태
 
+    //Board Detail Form
     const form = reactive({
       sysNo: '',
       title: '',
@@ -193,23 +218,26 @@ export default {
       imgPath: [],
       userId: '',
       userSysNo: '',
+      createDate: '',
     })
 
+    //새로운 댓글
     const newComment = reactive({
       sysNo: '',
       boardSysNo: '', //미리 세팅되어야 함
       comment: '',
       userId: userId, //미리 세팅되어야 함
-      userSysNo: 'asdf', //미리 세팅되어야 함, login할 때 jwtToken에 userSysNo도 있어야 함
+      userSysNo: userSysNo, //미리 세팅되어야 함
     })
 
+    //새로운 답글
     const newReply = reactive({
       sysNo: '',
       parSysNo: '',
       boardSysNo: '', //미리 세팅되어야 함
       comment: '',
       userId: userId, //미리 세팅되어야 함
-      userSysNo: 'asdf', //미리 세팅되어야 함, login할 때 jwtToken에 userSysNo도 있어야 함
+      userSysNo: userSysNo, //미리 세팅되어야 함
     })
 
     const getBoardDetail = async () => {
@@ -217,6 +245,8 @@ export default {
         searchList: { sysNo: sysNoParam },
         pageSize: 10,
         pageIndex: 0,
+        userId: userId,
+        userSysNo: userSysNo,
       })
 
       if (response.success) {
@@ -239,6 +269,7 @@ export default {
         form.content = response.data[0].content
         form.userId = response.data[0].userId
         form.userSysNo = response.data[0].userSysNo
+        form.createDate = response.data[0].formattedCreateDate
 
         //새로운 댓글을 위한 세팅
         newComment.boardSysNo = response.data[0].sysNo
@@ -249,6 +280,11 @@ export default {
           ...comment,
           repliesVisible: false, // 초기에는 대댓글 숨김
         }))
+        if (response.data[0].likeFlag == 'Increase') {
+          isLiked.value = true // 파란 버튼 (좋아요 누름)
+        } else {
+          isLiked.value = false // 흰 버튼 (좋아요 안 누름)
+        }
       } else {
         ElMessageBox.alert(response.message, '', {
           confirmButtonText: '확인',
@@ -278,7 +314,6 @@ export default {
         // 기존 이미지 삭제 시 deletedImages에 추가
         deletedImages.value.push(file.url)
         form.imgPath = form.imgPath.filter((img) => img !== file.url)
-        console.log('기존 img 삭제시 form.imgPath', form.imgPath)
       } else {
         const newFileData = new FormData()
         for (const [key, value] of fileData.entries()) {
@@ -297,7 +332,6 @@ export default {
     }
 
     const updateFileList = () => {
-      console.log('form.imgPath ' + form.imgPath)
       const updatedList = form.imgPath.map((url, index) => {
         const fileName = url.split('/')[3] // 파일 이름 추출
         const uid = `file-${index}` // 고유 ID 생성
@@ -307,14 +341,13 @@ export default {
           uid,
         }
       })
-      // console.log('updatedList ' + JSON.stringify(updatedList))
       fileList.value = [...updatedList]
     }
 
     //수정버튼 클릭시 수정 페이지로 이동
     const modifyBoard = async () => {
       if (!editToggle.value) {
-        if (!form.title || !form.content) {
+        if (!form.title.trim() || !form.content.trim()) {
           ElMessageBox.alert('제목과 내용을 입력해주세요!', '', {
             confirmButtonText: '확인',
             type: 'warning',
@@ -327,55 +360,50 @@ export default {
             const presignedURLs = await boardAPI.getPresignedURL(fileData)
             //S3에 업로드
             const files = fileData.getAll('files')
-            console.log('presignedURLs.length ' + presignedURLs.length)
             for (let i = 0; i < presignedURLs.length; i++) {
               const file = files[i] // FormData에서 해당 파일 가져오기
               // S3에 파일 업로드
               const response = await boardAPI.uploadFile(presignedURLs[i], file)
               fileNames.push(decodeURIComponent(response.split('/')[3]))
             }
-            console.log('fileNames' + fileNames)
             form.imgPath = [
               ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
               ...fileNames, // 새로 업로드된 파일명 추가
             ]
-            console.log('form.imgPath ' + JSON.stringify(form.imgPath))
           }
-
           //s3에서 파일 삭제 + 서버 만들어야 함
           if (deletedImages.value.length > 0) {
-            console.log('deletedImages ' + JSON.stringify(deletedImages.value))
-          }
+            const deletePayload = { keys: deletedImages.value }
 
+            await boardAPI.deleteFiles(deletePayload)
+          }
           form.imgPath = [
             ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
           ]
-        }
 
-        //저장 수행 API 호출
-        const response = await boardAPI.createBoard(form)
+          //저장 수행 API 호출
+          const response = await boardAPI.createBoard(form)
 
-        if (response.success) {
-          ElMessageBox.alert('저장되었습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'success',
-          })
-            .then(() => {
-              form.imgPath = []
-              deletedImages = []
-              fileList.value = []
-              fileData = new FormData()
-              getBoardDetail()
-              editToggle.value = true
-
-              console.log('create후 form.imagepath', form.imgPath)
+          if (response.success) {
+            ElMessageBox.alert('저장되었습니다.', '', {
+              confirmButtonText: '확인',
+              type: 'success',
             })
-            .catch(() => {})
-        } else {
-          ElMessageBox.alert(response.message, '', {
-            confirmButtonText: '확인',
-            type: 'error',
-          }).catch(() => {})
+              .then(() => {
+                form.imgPath = []
+                deletedImages.value = []
+                fileList.value = []
+                fileData = new FormData()
+                getBoardDetail()
+                editToggle.value = true
+              })
+              .catch(() => {})
+          } else {
+            ElMessageBox.alert(response.message, '', {
+              confirmButtonText: '확인',
+              type: 'error',
+            }).catch(() => {})
+          }
         }
       } else {
         //사용자가 작성자이면 수정
@@ -393,20 +421,40 @@ export default {
     }
 
     //좋아요 버튼 클릭시 Redis 좋아요 Count 증가
-    const addLikeCount = async () => {
-      await boardAPI.addViewCount({ type: 'like', sysNo: form.sysNo })
+    const toggleLikeBtn = async () => {
+      if (isLiked.value) {
+        //좋아요 누른 상황 -> 취소인 경우
+        isLiked.value = false
+        await boardAPI.updateCount({
+          type: 'like',
+          action: 'Decrease',
+          sysNo: form.sysNo,
+          title: form.title,
+          userId: userId,
+          userSysNo: userSysNo,
+        })
+      } else {
+        //좋아요 안누른 상황 -> 좋아요 누른 경우
+        isLiked.value = true
+        await boardAPI.updateCount({
+          type: 'like',
+          action: 'Increase',
+          sysNo: form.sysNo,
+          title: form.title,
+          userId: userId,
+          userSysNo: userSysNo,
+        })
+      }
     }
 
     //댓글 등록 버튼 클릭시 댓글 저장
     const createComment = async (comment = null) => {
       let response
       if (comment != null) {
-        console.log('comment != null: ', comment)
         newReply.parSysNo = comment.sysNo
         newReply.boardSysNo = form.sysNo
         newReply.comment = replyInputs[comment.sysNo] || '' // 해당 댓글의 입력값 사용
 
-        console.log('newReply.parSysNo: ', newReply.parSysNo)
         response = await boardAPI.createComment(newReply)
       } else {
         response = await boardAPI.createComment(newComment)
@@ -436,6 +484,15 @@ export default {
       comment.repliesVisible = !comment.repliesVisible // 토글 기능
     }
 
+    // 버튼 스타일 (computed)
+    const buttonStyle = computed(() => {
+      return {
+        backgroundColor: isLiked.value ? '#409EFF' : '#ffffff', // 좋아요가 눌리면 파란색, 아니면 흰색
+        color: isLiked.value ? '#ffffff' : 'black', // 눌린 상태는 흰색 텍스트, 아니면 파란색 텍스트
+        borderColor: isLiked.value ? '#409EFF' : '#dcdfe6', // 눌린 상태는 파란색 테두리, 아니면 기본 테두리
+      }
+    })
+
     return {
       goBack,
       form,
@@ -451,13 +508,14 @@ export default {
       previewImage,
       dialogVisible,
       deletedImages,
-      addLikeCount,
+      toggleLikeBtn,
       newComment,
       createComment,
       commentList,
       showReplyList,
       newReply,
       replyInputs,
+      buttonStyle,
     }
   },
 }
@@ -467,9 +525,10 @@ export default {
 .container {
     padding: 30px 400px 30px 400px;
 }
+.like-container{
+  padding-bottom: 20px;
+}
 .like-container .el-button{
-  display: flex;
-  justify-content: flex-start;
   border-radius: 50px; /* 버튼을 둥글게 만듦 */
   padding: 10px 20px; /* 적당한 내부 여백 */
   background-color: white;
@@ -507,12 +566,12 @@ export default {
 .comment-item{
   border-bottom: 1px solid #c8c8c8;
 }
-.comment-item-user{
+.comment-item-user, .detail-user{
   display: flex; 
   gap: 10px; /* textarea와 버튼 사이 간격 조절 */
   margin-top: 20px;
 }
-.comment-item-user-idDate{
+.comment-item-user-idDate, .detail-user-idDate{
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -548,5 +607,16 @@ export default {
   border-top: 2px solid #c8c8c8;
   padding-top: 20px;
   padding-bottom: 20px;
+}
+.like-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* label 자리 공백을 유지 */
+.like-wrapper::before {
+  content: "";
+  display: inline-block;
+  width: 50px; /* label 영역의 기본 크기와 동일하게 설정 */
 }
 </style>

@@ -1,7 +1,4 @@
-// authStore.js에서 토큰을 저장하고 사용하는 예시
-
 import { defineStore } from 'pinia'
-// import jwt_decode from 'jsonwebtoken'
 import { jwtDecode } from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', {

@@ -144,11 +144,6 @@
             {{ scope.row.view }}
           </template>
         </el-table-column>
-        <el-table-column label="좋아요" show-overflow-tooltip>
-          <template #default="scope">
-            {{ scope.row.likeCount }}
-          </template>
-        </el-table-column>
       </el-table>
     </div>
 
@@ -212,7 +207,7 @@ export default {
     //로드시 게시판 목록 조회
     onMounted(() => {
       getBoardList({
-        type: 'likeList',
+        type: 'viewList',
         searchList: Object.fromEntries(new Map()), //빈 맵
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -239,7 +234,7 @@ export default {
           return acc
         }, {})
       getBoardList({
-        type: 'likeList',
+        type: 'viewList',
         searchList: filter,
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -269,7 +264,7 @@ export default {
       router.push({ path: '/board/post' })
     }
 
-    //행 클릭시 상세 페에지로 이동
+    //행 클릭시 상세 페이지로 이동
     const goToDetailPage = async (row) => {
       await boardAPI.updateCount({
         type: 'view',
@@ -303,7 +298,6 @@ export default {
       getBoardList,
       getSearchBoardList,
       chagePaging,
-      // getNumberStyle,
       getRowClassName,
     }
   },
@@ -351,6 +345,6 @@ export default {
 }
 ::v-deep .highlight-row {
   background-color: #fffde0 !important; /* 원하는 색상으로 변경 */
-  font-weight: bold;  
+  font-weight: bold;
 }
 </style>

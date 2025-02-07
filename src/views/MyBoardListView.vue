@@ -7,24 +7,19 @@
     <!-- 버튼 컴포넌트 Container-->
     <div class="button-container">
       <!-- 글쓰기 버튼-->
+      <el-button @click="deleteSelected">🗑️ 삭제 </el-button>
       <el-button type="primary" @click="goWritePage">글쓰기 </el-button>
     </div>
     <!-- 게시판 리스트 테이블-->
     <div class="table-container">
       <el-table
         :data="boardList"
+        @selection-change="selectionChange"
         border
         style="width: 100%"
         @row-click="goToDetailPage"
-        :row-class-name="getRowClassName"
       >
-        <!-- 번호 컬럼 추가 -->
-        <el-table-column
-          type="index"
-          label=""
-          width="50"
-          align="center"
-        ></el-table-column>
+        <el-table-column type="selection" width="40"></el-table-column>
         <el-table-column
           label="sysNo"
           prop="sysNo"
@@ -144,11 +139,6 @@
             {{ scope.row.view }}
           </template>
         </el-table-column>
-        <el-table-column label="좋아요" show-overflow-tooltip>
-          <template #default="scope">
-            {{ scope.row.likeCount }}
-          </template>
-        </el-table-column>
       </el-table>
     </div>
 
@@ -172,6 +162,7 @@ import { reactive, ref, onMounted } from 'vue' //ref:DOM 요소의 상태 변화
 import { Search } from '@element-plus/icons-vue'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
+import { ElMessageBox } from 'element-plus'
 // import Cookies from 'js-cookie'
 
 export default {
@@ -189,6 +180,7 @@ export default {
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
     const currentPage = ref(1)
+    const selectedRows = ref([]) // 선택된 행들이 들어갈 배열
     const pageSize = 10
 
     //input란 텍스트
@@ -212,7 +204,7 @@ export default {
     //로드시 게시판 목록 조회
     onMounted(() => {
       getBoardList({
-        type: 'likeList',
+        type: 'myBoardList',
         searchList: Object.fromEntries(new Map()), //빈 맵
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -239,7 +231,7 @@ export default {
           return acc
         }, {})
       getBoardList({
-        type: 'likeList',
+        type: 'myBoardList',
         searchList: filter,
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -281,12 +273,47 @@ export default {
       router.push({ path: `/board/detail/${row.sysNo}` })
     }
 
-    // 특정 행에 대한 클래스명 지정
-    const getRowClassName = ({ rowIndex }) => {
-      if (rowIndex < 3) {
-        return 'highlight-row' // 1, 2, 3번째 행에 클래스 추가
+    //체크 박스 삭제 버튼 클릭시, 해당 게시물 삭제
+    const deleteSelected = async () => {
+      console.log('selectedRows.value: ', selectedRows.value)
+      if (selectedRows.value.length > 0) {
+        // 예: 서버에 요청 보내기, 로컬 데이터에서 삭제하기 등
+        const response = await boardAPI.deleteBoardList({
+          deleteList: selectedRows.value,
+        })
+        if (response.success) {
+          ElMessageBox.alert('삭제되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
+          })
+            .then(() => {
+              getBoardList({
+                type: 'myBoardList',
+                searchList: Object.fromEntries(new Map()), //빈 맵
+                pageSize: pageSize,
+                pageIndex: currentPage.value * pageSize - pageSize,
+                userId: userId,
+                userSysNo: userSysNo,
+              })
+            })
+            .catch(() => {})
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'error',
+          }).catch(() => {})
+        }
+      } else {
+        ElMessageBox.alert('선택된 항목이 없습니다.', '', {
+          confirmButtonText: '확인',
+          type: 'error',
+        }).catch(() => {})
       }
-      return '' // 나머지 행은 기본 스타일
+    }
+
+    //체크 박스 선택시 selectedRows에 sysNo 세팅
+    const selectionChange = (val) => {
+      selectedRows.value = val.map((row) => row.sysNo)
     }
 
     return {
@@ -303,8 +330,9 @@ export default {
       getBoardList,
       getSearchBoardList,
       chagePaging,
-      // getNumberStyle,
-      getRowClassName,
+      deleteSelected,
+      selectedRows,
+      selectionChange,
     }
   },
 }
@@ -348,9 +376,5 @@ export default {
   width: 100%; /* 부모 요소에 딱 맞게 */
   margin-top: 5px;
   display: flex;
-}
-::v-deep .highlight-row {
-  background-color: #fffde0 !important; /* 원하는 색상으로 변경 */
-  font-weight: bold;  
 }
 </style>

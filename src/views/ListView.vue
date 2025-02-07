@@ -10,7 +10,7 @@
       <el-button type="primary" @click="goWritePage">글쓰기 </el-button>
     </div>
     <!-- 게시판 리스트 테이블-->
-    <div class="table-containter">
+    <div class="table-container">
       <el-table
         :data="boardList"
         border
@@ -158,6 +158,7 @@ import { useRouter } from 'vue-router'
 import { reactive, ref, onMounted } from 'vue' //ref:DOM 요소의 상태 변화를 감지할 수 있는 객체 //computed
 import { Search } from '@element-plus/icons-vue'
 import boardAPI from '../api/BoardAPI'
+import { useAuthStore } from '../store/auth'
 // import Cookies from 'js-cookie'
 
 export default {
@@ -167,6 +168,9 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const authStore = useAuthStore()
+    const userId = authStore.getUserId
+    const userSysNo = authStore.getSysNo
 
     const hiddenFlag = ref(false) //false로 설정
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
@@ -199,6 +203,8 @@ export default {
         searchList: Object.fromEntries(new Map()), //빈 맵
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
+        userId: userId,
+        userSysNo: userSysNo,
       })
     })
 
@@ -213,7 +219,6 @@ export default {
 
     //검색란 Enter시에 조건으로 검색
     const getSearchBoardList = () => {
-      console.log('searchFilters', searchFilters)
       const filter = Object.entries(searchFilters)
         .filter(([, value]) => value !== '') // 빈 문자열이 아닌 값만 남기기
         .reduce((acc, [key, value]) => {
@@ -225,6 +230,8 @@ export default {
         searchList: filter,
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
+        userId: userId,
+        userSysNo: userSysNo,
       })
 
       //토글 false
@@ -251,7 +258,13 @@ export default {
 
     //행 클릭시 상세 페에지로 이동
     const goToDetailPage = async (row) => {
-      await boardAPI.addViewCount({ type: 'view', sysNo: row.sysNo })
+      await boardAPI.updateCount({
+        type: 'view',
+        action: 'Increase',
+        sysNo: row.sysNo,
+        userId: userId,
+        userSysNo: userSysNo,
+      })
       router.push({ path: `/board/detail/${row.sysNo}` })
     }
 
@@ -288,7 +301,8 @@ export default {
   justify-content: space-between;
 }
 .table-container {
-  height: 450px;
+  height: 440px;
+  border : 1px solid #f7f3f3;
 }
 .el-table__inner-wrapper {
     display: flex;

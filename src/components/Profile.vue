@@ -10,7 +10,9 @@
     >
       <div class="menu-left">
         <el-menu-item index="1" @click="goToBoardList">Home</el-menu-item>
-        <el-menu-item index="2" @click="goToBoardList">조회수 TOP</el-menu-item>
+        <el-menu-item index="2" @click="goToViewTopList"
+          >조회수 TOP</el-menu-item
+        >
         <el-menu-item index="3" @click="goToLikeTopList"
           >좋아요 TOP</el-menu-item
         >
@@ -26,9 +28,15 @@
             />
             {{ userId }}
           </template>
-          <el-menu-item index="5-2" @click="userDetail" class="user-menu">{{
+          <el-menu-item index="5-4" @click="userDetail" class="user-menu">{{
             userId
           }}</el-menu-item>
+          <el-menu-item index="5-3" @click="goToMyBoardList" class="user-menu"
+            >내 게시글 관리</el-menu-item
+          >
+          <el-menu-item index="5-2" @click="goToMyLikeList" class="user-menu"
+            >👍 좋아요 목록</el-menu-item
+          >
           <el-menu-item index="5-1" @click="logout" class="user-menu"
             >로그아웃</el-menu-item
           >
@@ -48,7 +56,7 @@
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
 import { ref, computed } from 'vue'
-import UserDetailView from '../views/UserDetailView.vue' // DetailView 컴포넌트 임포트
+import UserDetailView from '../views/UserDetailView.vue'
 
 export default {
   name: 'UserProfile',
@@ -63,7 +71,7 @@ export default {
 
     const isUserDetailVisible = ref(false)
 
-    // 프로필 상세 페이지로 이동
+    // 프로필 상세 화면 이동
     const userDetail = () => {
       isUserDetailVisible.value = true
     }
@@ -71,19 +79,37 @@ export default {
     // 로그아웃 처리
     const logout = () => {
       authStore.logout()
-      router.push({ path: '/board/' })
+      router.push({ path: '/' })
     }
 
+    //게시판 목록 화면 이동
     const goToBoardList = () => {
       router.push({ path: '/board/list' })
     }
 
+    //사용자 상세 팝업 Flag
     const handleUserDetailClose = (value) => {
       isUserDetailVisible.value = value
     }
 
+    //좋아요 TOP 목록 화면 이동
     const goToLikeTopList = () => {
       router.push({ path: '/board/likeTopList' })
+    }
+
+    //조회수 TOP 목록 화면 이동
+    const goToViewTopList = () => {
+      router.push({ path: '/board/viewTopList' })
+    }
+
+    //내 게시글 관리 화면 이동
+    const goToMyBoardList = () => {
+      router.push({ path: '/board/myBoardList' })
+    }
+
+    //내 좋아요 목록 화면 이동
+    const goToMyLikeList = () => {
+      router.push({ path: '/board/myLikeList' })
     }
 
     return {
@@ -95,6 +121,9 @@ export default {
       userId,
       isUserDetailVisible,
       goToLikeTopList,
+      goToViewTopList,
+      goToMyBoardList,
+      goToMyLikeList,
     }
   },
 }

@@ -110,12 +110,6 @@ export default {
 
     //수정 버튼 클릭시 저장
     const modify = async () => {
-      console.log('form.currentPassword ' + form.currentPassword)
-      console.log('password.value ' + JSON.stringify(toRefs(props).password))
-      console.log(
-        'toRefs(props).password.value ' + toRefs(props).password.value
-      )
-
       //모든 필드를 입력했는지 확인
       if (!form.currentPassword || !form.newPassword) {
         ElMessageBox.alert('모든 필드를 입력해주세요!', '', {

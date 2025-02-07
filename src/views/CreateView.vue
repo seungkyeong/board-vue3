@@ -111,37 +111,37 @@ export default {
           const presignedURLs = await boardAPI.getPresignedURL(fileData)
           //S3에 업로드
           const files = fileData.getAll('files')
-          console.log('presignedURLs.length ' + presignedURLs.length)
+          // console.log('presignedURLs.length ' + presignedURLs.length)
           for (let i = 0; i < presignedURLs.length; i++) {
             const file = files[i] // FormData에서 해당 파일 가져오기
             // S3에 파일 업로드
-            const response = await boardAPI.uploadFile(presignedURLs[i], file) //const response =
+            const response = await boardAPI.uploadFile(presignedURLs[i], file)
             //파일 이름만 저장
             imgPath.push(decodeURIComponent(response.split('/')[3]))
           }
           form.imgPath = imgPath
         }
-      }
 
-      //저장 수행 API 호출
-      const response = await boardAPI.createBoard(form)
-      try {
-        if (response.success) {
-          ElMessageBox.alert('저장되었습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'success',
-          })
+        //저장 수행 API 호출
+        const response = await boardAPI.createBoard(form)
+        try {
+          if (response.success) {
+            ElMessageBox.alert('저장되었습니다.', '', {
+              confirmButtonText: '확인',
+              type: 'success',
+            })
+            router.go(-1)
+          } else {
+            ElMessageBox.alert(response.message, '', {
+              confirmButtonText: '확인',
+              type: 'warning',
+            })
+            router.go(-1)
+          }
+        } catch (error) {
           router.push({ path: '/board/list' })
-        } else {
-          ElMessageBox.alert(response.message, '', {
-            confirmButtonText: '확인',
-            type: 'warning',
-          })
-          router.push({ path: '/board/list' })
+          console.error('Fail:', error)
         }
-      } catch (error) {
-        router.push({ path: '/board/list' })
-        console.error('Fail:', error)
       }
     }
 

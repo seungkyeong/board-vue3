@@ -10,10 +10,13 @@ import UserDetailView from '../views/UserDetailView.vue'
 import ResultIdView from '../views/ResultIdView.vue'
 import ResultPwView from '../views/ResultPwView.vue'
 import LikeTopListView from '../views/LikeTopListView.vue'
+import ViewTopListView from '../views/ViewTopListView.vue'
+import MyBoardListView from '../views/MyBoardListView.vue'
+import MyLikeListView from '../views/MyLikeListView.vue'
 
 const routes = [
   {
-    path: '/board',
+    path: '/',
     name: 'HomeView',
     component: HomeView,
   },
@@ -28,12 +31,12 @@ const routes = [
     component: LikeTopListView,
   },
   {
-    path: '/board/post', ///:id
+    path: '/board/post',
     name: 'CreateView',
     component: CreateView,
   },
   {
-    path: '/board/detail/:sysNo', //:id
+    path: '/board/detail/:sysNo',
     name: 'DetailView',
     component: DetailView,
   },
@@ -66,6 +69,21 @@ const routes = [
     path: '/board/resultPw',
     name: 'ResultPwView',
     component: ResultPwView,
+  },
+  {
+    path: '/board/viewTopList',
+    name: 'ViewTopListView',
+    component: ViewTopListView,
+  },
+  {
+    path: '/board/myBoardList',
+    name: 'MyBoardListView',
+    component: MyBoardListView,
+  },
+  {
+    path: '/board/myLikeList',
+    name: 'MyLikeListView',
+    component: MyLikeListView,
   },
 ]
 

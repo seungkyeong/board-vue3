@@ -74,16 +74,11 @@ export default {
         const response = await boardAPI.login(form) // await 사용
         if (response?.success) {
           // 토큰 저장
-          console.log('response.data, login ' + response.data)
           const token = response.data
 
           const authStore = useAuthStore()
           authStore.login(token)
           localStorage.setItem('jwtToken', token)
-          console.log(
-            'Token 저장 후 localStorage: ',
-            localStorage.getItem('jwtToken')
-          )
 
           // 리스트 페이지로 이동
           router.push({ path: '/board/list' })

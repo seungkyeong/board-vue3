@@ -16,15 +16,7 @@
         border
         style="width: 100%"
         @row-click="goToDetailPage"
-        :row-class-name="getRowClassName"
       >
-        <!-- 번호 컬럼 추가 -->
-        <el-table-column
-          type="index"
-          label=""
-          width="50"
-          align="center"
-        ></el-table-column>
         <el-table-column
           label="sysNo"
           prop="sysNo"
@@ -144,11 +136,6 @@
             {{ scope.row.view }}
           </template>
         </el-table-column>
-        <el-table-column label="좋아요" show-overflow-tooltip>
-          <template #default="scope">
-            {{ scope.row.likeCount }}
-          </template>
-        </el-table-column>
       </el-table>
     </div>
 
@@ -212,7 +199,7 @@ export default {
     //로드시 게시판 목록 조회
     onMounted(() => {
       getBoardList({
-        type: 'likeList',
+        type: 'myLikeList',
         searchList: Object.fromEntries(new Map()), //빈 맵
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -239,7 +226,7 @@ export default {
           return acc
         }, {})
       getBoardList({
-        type: 'likeList',
+        type: 'myLikeList',
         searchList: filter,
         pageSize: pageSize,
         pageIndex: currentPage.value * pageSize - pageSize,
@@ -281,14 +268,6 @@ export default {
       router.push({ path: `/board/detail/${row.sysNo}` })
     }
 
-    // 특정 행에 대한 클래스명 지정
-    const getRowClassName = ({ rowIndex }) => {
-      if (rowIndex < 3) {
-        return 'highlight-row' // 1, 2, 3번째 행에 클래스 추가
-      }
-      return '' // 나머지 행은 기본 스타일
-    }
-
     return {
       boardList,
       searchFilters,
@@ -303,8 +282,6 @@ export default {
       getBoardList,
       getSearchBoardList,
       chagePaging,
-      // getNumberStyle,
-      getRowClassName,
     }
   },
 }
@@ -348,9 +325,5 @@ export default {
   width: 100%; /* 부모 요소에 딱 맞게 */
   margin-top: 5px;
   display: flex;
-}
-::v-deep .highlight-row {
-  background-color: #fffde0 !important; /* 원하는 색상으로 변경 */
-  font-weight: bold;  
 }
 </style>

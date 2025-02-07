@@ -83,13 +83,12 @@ export default {
 
     //로고 클릭시
     const toLogin = async () => {
-      router.push({ path: '/board/' })
+      router.push({ path: '/' })
     }
 
     // 이메일 유효성 검사 함수
     const validateEmail = (rule, value, callback) => {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      console.log('value', value)
       if (!value) {
         callback(new Error('이메일을 입력해주세요'))
       } else if (!emailPattern.test(value)) {
