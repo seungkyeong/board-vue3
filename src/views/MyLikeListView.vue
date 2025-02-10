@@ -7,16 +7,19 @@
     <!-- 버튼 컴포넌트 Container-->
     <div class="button-container">
       <!-- 글쓰기 버튼-->
+      <el-button @click="deleteSelected">🗑️ 삭제 </el-button>
       <el-button type="primary" @click="goWritePage">글쓰기 </el-button>
     </div>
     <!-- 게시판 리스트 테이블-->
     <div class="table-container">
       <el-table
         :data="boardList"
+        @selection-change="selectionChange"
         border
         style="width: 100%"
         @row-click="goToDetailPage"
       >
+        <el-table-column type="selection" width="40"></el-table-column>
         <el-table-column
           label="sysNo"
           prop="sysNo"
@@ -159,6 +162,7 @@ import { reactive, ref, onMounted } from 'vue' //ref:DOM 요소의 상태 변화
 import { Search } from '@element-plus/icons-vue'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
+import { ElMessageBox } from 'element-plus'
 // import Cookies from 'js-cookie'
 
 export default {
@@ -176,6 +180,7 @@ export default {
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
     const currentPage = ref(1)
+    const selectedRows = ref([]) // 선택된 행들이 들어갈 배열
     const pageSize = 10
 
     //input란 텍스트
@@ -268,6 +273,53 @@ export default {
       router.push({ path: `/board/detail/${row.sysNo}` })
     }
 
+    //체크 박스 삭제 버튼 클릭시, 해당 게시물 삭제
+    const deleteSelected = async () => {
+      console.log('selectedRows.value: ', selectedRows.value)
+      if (selectedRows.value.length > 0) {
+        // 예: 서버에 요청 보내기, 로컬 데이터에서 삭제하기 등
+        const response = await boardAPI.deleteLikeList({
+          type: 'like',
+          action: 'Decrease',
+          userId: userId,
+          userSysNo: userSysNo,
+          deleteList: selectedRows.value,
+        })
+        if (response.success) {
+          ElMessageBox.alert('삭제되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
+          })
+            .then(() => {
+              getBoardList({
+                type: 'myLikeList',
+                searchList: Object.fromEntries(new Map()), //빈 맵
+                pageSize: pageSize,
+                pageIndex: currentPage.value * pageSize - pageSize,
+                userId: userId,
+                userSysNo: userSysNo,
+              })
+            })
+            .catch(() => {})
+        } else {
+          ElMessageBox.alert(response.message, '', {
+            confirmButtonText: '확인',
+            type: 'error',
+          }).catch(() => {})
+        }
+      } else {
+        ElMessageBox.alert('선택된 항목이 없습니다.', '', {
+          confirmButtonText: '확인',
+          type: 'error',
+        }).catch(() => {})
+      }
+    }
+
+    //체크 박스 선택시 selectedRows에 sysNo 세팅
+    const selectionChange = (val) => {
+      selectedRows.value = val.map((row) => row.sysNo)
+    }
+
     return {
       boardList,
       searchFilters,
@@ -282,6 +334,9 @@ export default {
       getBoardList,
       getSearchBoardList,
       chagePaging,
+      deleteSelected,
+      selectedRows,
+      selectionChange,
     }
   },
 }

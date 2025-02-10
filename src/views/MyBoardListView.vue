@@ -279,6 +279,9 @@ export default {
       if (selectedRows.value.length > 0) {
         // 예: 서버에 요청 보내기, 로컬 데이터에서 삭제하기 등
         const response = await boardAPI.deleteBoardList({
+          type: 'board',
+          userId: userId,
+          userSysNo: userSysNo,
           deleteList: selectedRows.value,
         })
         if (response.success) {

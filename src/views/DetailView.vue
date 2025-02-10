@@ -225,9 +225,12 @@ export default {
     const newComment = reactive({
       sysNo: '',
       boardSysNo: '', //미리 세팅되어야 함
+      title: '',
       comment: '',
       userId: userId, //미리 세팅되어야 함
       userSysNo: userSysNo, //미리 세팅되어야 함
+      boardCreater: '',
+      boardCreaterSysNo: '',
     })
 
     //새로운 답글
@@ -235,9 +238,12 @@ export default {
       sysNo: '',
       parSysNo: '',
       boardSysNo: '', //미리 세팅되어야 함
+      title: '',
       comment: '',
       userId: userId, //미리 세팅되어야 함
       userSysNo: userSysNo, //미리 세팅되어야 함
+      boardCreater: '',
+      boardCreaterSysNo: '',
     })
 
     const getBoardDetail = async () => {
@@ -273,7 +279,13 @@ export default {
 
         //새로운 댓글을 위한 세팅
         newComment.boardSysNo = response.data[0].sysNo
+        newComment.boardCreater = response.data[0].userId
+        newComment.boardCreaterSysNo = response.data[0].userSysNo
+        newComment.title = response.data[0].title
+        newReply.title = response.data[0].title
         newReply.boardSysNo = response.data[0].sysNo
+        newReply.boardCreater = response.data[0].userId
+        newReply.boardCreaterSysNo = response.data[0].userSysNo
 
         //댓글 리스트 세팅
         commentList.value = response.data[1].map((comment) => ({
@@ -429,7 +441,6 @@ export default {
           type: 'like',
           action: 'Decrease',
           sysNo: form.sysNo,
-          title: form.title,
           userId: userId,
           userSysNo: userSysNo,
         })
@@ -440,7 +451,6 @@ export default {
           type: 'like',
           action: 'Increase',
           sysNo: form.sysNo,
-          title: form.title,
           userId: userId,
           userSysNo: userSysNo,
         })

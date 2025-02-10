@@ -19,6 +19,47 @@
         <el-menu-item index="4" @click="goToBoardList">공지사항</el-menu-item>
       </div>
       <div class="menu-right">
+        <el-dropdown trigger="click">
+          <el-icon
+            v-if="!notiFlag"
+            class="no-noti-bell"
+            @click="openNoti"
+            style="color: #c8c8c8"
+            ><Bell
+          /></el-icon>
+          <el-icon
+            v-if="notiFlag"
+            class="yes-noti-bell"
+            @click="openNoti"
+            style="color: #c8c8c8"
+            ><BellFilled
+          /></el-icon>
+          <template v-slot:dropdown>
+            <div class="dropdown-scroll-container">
+              <el-dropdown-item
+                v-for="(notification, index) in notifications"
+                :key="index"
+                @click="goToBoardDetail(notification)"
+                :class="{
+                  'read-noti': notification.readFlag,
+                  'unread-noti': !notification.readFlag,
+                }"
+              >
+                <a
+                  :href="`/board/detail/${notification.boardSysNo}`"
+                  class="notification-link"
+                >
+                  [<span class="title">{{ notification.title }} </span>] 에
+                  댓글이 달렸습니다.
+                </a>
+              </el-dropdown-item>
+              <el-dropdown-item v-if="notifications.length === 0" disabled
+                >새 알림 없음</el-dropdown-item
+              >
+            </div>
+          </template>
+        </el-dropdown>
+
         <el-sub-menu index="5" class="user-menu">
           <template #title>
             <el-avatar
@@ -55,21 +96,31 @@
 <script>
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
-import { ref, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import UserDetailView from '../views/UserDetailView.vue'
+import { Bell, BellFilled } from '@element-plus/icons-vue'
+import boardAPI from '../api/BoardAPI'
 
 export default {
   name: 'UserProfile',
   components: {
     UserDetailView,
+    Bell,
+    BellFilled,
   },
   setup() {
     const authStore = useAuthStore() // Pinia store 가져오기
     const router = useRouter()
 
-    const userId = computed(() => authStore.getUserId)
+    const userId = authStore.getUserId
+    const userSysNo = authStore.getSysNo
 
     const isUserDetailVisible = ref(false)
+    const notifications = ref([]) // 현재 표시 중인 알림 목록
+    const notiLength = ref(0) // 알림 개수
+    const notiFlag = ref(false) //알림 있는지/없는지 플래그
+
+    let socket
 
     // 프로필 상세 화면 이동
     const userDetail = () => {
@@ -112,6 +163,91 @@ export default {
       router.push({ path: '/board/myLikeList' })
     }
 
+    //특정 알림 Row 클릭시, 해당 게시물 상세 화면 이동
+    const goToBoardDetail = async (notification) => {
+      if (notification.readFlag == false) {
+        notification.readFlag = true
+        await boardAPI.updateNotiReadFlag(notification)
+      }
+      await boardAPI.updateCount({
+        type: 'view',
+        action: 'Increase',
+        sysNo: notification.boardSysNo,
+        userId: userId,
+        userSysNo: userSysNo,
+      })
+      router.push({
+        path: `/board/detail/${notification.boardSysNo}`,
+        force: true,
+      })
+    }
+
+    // 알림 Flag로 Bell Icon 변경
+    const updateBellColor = () => {
+      // 읽지 않은 알림이 하나라도 있는지 확인
+      const hasUnreadNotification = notifications.value.some(
+        (notification) => !notification.readFlag
+      )
+
+      // 읽지 않은 알림이 있으면 벨 색상 플래그를 true로 설정
+
+      notiFlag.value = hasUnreadNotification
+      // if (notifications.value.length > 0) {
+      //   notiFlag.value = true
+      // } else {
+      //   notiFlag.value = false
+      // }
+    }
+
+    // WebSocket 연결 및 알림 받기
+    onMounted(async () => {
+      //jwt로 보안 강화
+      socket = new WebSocket(
+        `ws://3.38.151.156:8080/ws/notifications?userSysNo=${userSysNo}`
+      )
+
+      socket.onmessage = (event) => {
+        //event
+        console.log(event.message)
+        notiLength.value += 1
+        updateBellColor()
+      }
+
+      socket.onerror = (error) => {
+        console.error('WebSocket Error: ', error)
+      }
+
+      const response = await boardAPI.getNotiList({
+        userId: userId,
+        userSysNo: userSysNo,
+      })
+      if (response.success) {
+        notifications.value = response.data
+        notiLength.value = response.data.length
+        updateBellColor()
+      }
+    })
+
+    // 컴포넌트가 unmount 될 때 WebSocket 연결 종료
+    onUnmounted(() => {
+      if (socket) {
+        socket.close()
+      }
+    })
+
+    // 알림 조회
+    const openNoti = async () => {
+      const response = await boardAPI.getNotiList({
+        userId: userId,
+        userSysNo: userSysNo,
+      })
+      if (response.success) {
+        notifications.value = response.data
+        notiLength.value = response.data.length
+      }
+      updateBellColor()
+    }
+
     return {
       handleUserDetailClose,
       userDetail,
@@ -124,6 +260,13 @@ export default {
       goToViewTopList,
       goToMyBoardList,
       goToMyLikeList,
+      notifications,
+      updateBellColor,
+      userSysNo,
+      notiFlag,
+      openNoti,
+      notiLength,
+      goToBoardDetail,
     }
   },
 }
@@ -165,11 +308,68 @@ export default {
   margin-bottom: 10px; /* 프로필과 리스트 사이에 간격을 두어 레이아웃을 정리 */
 }
 .user-menu{
-  width: 200px;
-  /* font-weight: bold; */
+  width: 200px; 
 }
-/* .el-menu-demo .el-menu-item,
-.el-menu-demo .el-sub-menu .el-menu-item {
-  font-weight: bold; 
-} */
+.no-noti-bell, .yes-noti-bell{
+  font-size: 25px;
+  padding: 8px; /* 아이콘 주변에 여백 추가 */
+  transition: transform 0.3s, box-shadow 0.3s; /* 부드러운 애니메이션 추가 */
+}
+.no-noti-bell:hover, .yes-noti-bell:hover{
+  transform: translateY(-4px); /* hover 시 위로 올라가는 효과 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 효과 추가 */
+}
+.dropdown-scroll-container {
+  max-height: 300px; /* 🔹 최대 높이 지정 (원하는 값으로 변경 가능) */
+  overflow-y: auto;  /* 🔹 스크롤 자동 생성 */
+  overflow-x: hidden;
+  width: 250px;      /* 🔹 dropdown 크기 조절 */
+}
+::v-deep(.el-dropdown-menu__item.read-noti) {
+  background-color: rgba(231, 231, 231, 0.7);
+  color: black !important;
+}
+::v-deep(.el-dropdown-menu__item.unread-noti) {
+  background-color: hsl(198, 65%, 88%, 0.5) !important;  /* 🔹 안 읽은 알림 (readFlag: false) */
+  color: black !important;
+}
+.title{
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 스크롤바 전체 스타일 */
+.dropdown-scroll-container::-webkit-scrollbar {
+  width: 4px; /* 세로 스크롤바 너비 */
+  height: 4px; /* 가로 스크롤바 높이 (필요한 경우) */
+}
+
+/* 스크롤바 트랙 (배경) */
+.dropdown-scroll-container::-webkit-scrollbar-track {
+  background: transparent; /* 배경 투명하게 */
+}
+
+/* 스크롤바 핸들 (움직이는 부분) */
+.dropdown-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2); /* 색상 및 투명도 조절 */
+  border-radius: 4px; /* 둥근 모서리 */
+}
+
+/* 스크롤바 핸들 hover 효과 */
+.dropdown-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 기본 링크 색상: 검정색 */
+.notification-link {
+  color: black;
+  text-decoration: none; /* 기본 상태에서는 밑줄 없음 */
+}
+/* 활성화된 링크 상태 */
+.notification-link:active {
+  color: #333; /* 활성화된 상태에서 색상 변경 (원하는 색상으로 변경 가능) */
+  text-decoration: none; /* 활성화 상태에서는 밑줄 없앰 */
+}
 </style>

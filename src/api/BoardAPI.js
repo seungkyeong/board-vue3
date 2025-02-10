@@ -1,6 +1,3 @@
-import axios from 'axios'
-// import { ElMessageBox } from 'element-plus'
-
 const BASE_URL = 'http://3.38.151.156:8080/api/board/'
 // const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
 
@@ -229,7 +226,7 @@ export default {
   createComment: async function (requestData) {
     try {
       const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'post/comment', {
+      const response = await fetch(BASE_URL + 'comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -265,7 +262,7 @@ export default {
   deleteBoardList: async function (requestData) {
     try {
       const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'post/boardDelete', {
+      const response = await fetch(BASE_URL + 'boardDelete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,6 +273,60 @@ export default {
       return await response.json()
     } catch (error) {
       console.error('Fetch error: ', error)
+    }
+  },
+
+  /* 좋아요 리스트 삭제(좋아요 취소) */
+  deleteLikeList: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'likeDelete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error: ', error)
+    }
+  },
+
+  /* 알림 조회 */
+  getNotiList: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'notiList', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* 알림 조회 */
+  updateNotiReadFlag: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'update/notiList', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
     }
   },
 }
