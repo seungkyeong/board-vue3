@@ -51,6 +51,7 @@ export default {
     const router = useRouter()
 
     const form = reactive({
+      type: 'findId',
       email: '',
     })
 

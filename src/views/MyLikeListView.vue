@@ -94,44 +94,18 @@
         ></el-table-column>
         <el-table-column label="작성일" show-overflow-tooltip>
           <template #header>
-            <div class="header-container">
-              작성일
-              <el-icon @click="toggleSearch('createDate')" class="search-icon">
-                <Search />
-              </el-icon>
-            </div>
-            <div class="datepicker-container">
-              <el-date-picker
-                v-model="searchFilters.createDate"
-                v-if="visibleSearch.createDate"
-                @keydown.enter="getSearchBoardList"
-                type="date"
-              />
-            </div>
+            <div class="header-container">작성일</div>
           </template>
           <template #default="scope">
-            {{ scope.row.formattedCreateDate }}
+            {{ scope.row.createDate }}
           </template>
         </el-table-column>
         <el-table-column label="수정일" show-overflow-tooltip>
           <template #header>
-            <div class="header-container">
-              수정일
-              <el-icon @click="toggleSearch('modifyDate')" class="search-icon">
-                <Search />
-              </el-icon>
-            </div>
-            <div class="datepicker-container">
-              <el-date-picker
-                v-model="searchFilters.modifyDate"
-                v-if="visibleSearch.modifyDate"
-                @keydown.enter="getSearchBoardList"
-                type="date"
-              />
-            </div>
+            <div class="header-container">수정일</div>
           </template>
           <template #default="scope">
-            {{ scope.row.formattedModifyDate }}
+            {{ scope.row.modifyDate }}
           </template>
         </el-table-column>
         <el-table-column label="조회수" show-overflow-tooltip>
@@ -188,8 +162,6 @@ export default {
       title: '',
       content: '',
       userId: '',
-      createDate: '',
-      modifyDate: '',
     })
 
     //검색 아이콘 눌렀을 떄 조건부 렌더링 할 수 있도록 하는 데이터
@@ -197,8 +169,6 @@ export default {
       title: false,
       content: false,
       userId: false,
-      createDate: false,
-      modifyDate: false,
     })
 
     //로드시 게시판 목록 조회
@@ -356,7 +326,7 @@ export default {
   justify-content: space-between;
 }
 .table-container {
-  height: 440px;
+  height: 435px;
   border : 1px solid #f7f3f3;
 }
 .el-table__inner-wrapper {
@@ -375,10 +345,5 @@ export default {
   margin-left: 8px;
   font-size: 16px;
   color: #409eff;
-}
-.datepicker-container {
-  width: 100%; /* 부모 요소에 딱 맞게 */
-  margin-top: 5px;
-  display: flex;
 }
 </style>

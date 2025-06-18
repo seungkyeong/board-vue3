@@ -19,6 +19,17 @@
         <el-menu-item index="4" @click="goToBoardList">공지사항</el-menu-item>
       </div>
       <div class="menu-right">
+        <div class="session-timer" v-if="true">
+          <el-button
+            v-if="remainingTime <= 60"
+            type="warning"
+            size="small"
+            @click="extendSession"
+          >
+            로그인 연장
+          </el-button>
+        </div>
+
         <el-dropdown trigger="click">
           <el-icon
             v-if="!notiFlag"
@@ -76,7 +87,7 @@
             >내 게시글 관리</el-menu-item
           >
           <el-menu-item index="5-2" @click="goToMyLikeList" class="user-menu"
-            >👍 좋아요 목록</el-menu-item
+            >내 좋아요 관리</el-menu-item
           >
           <el-menu-item index="5-1" @click="logout" class="user-menu"
             >로그아웃</el-menu-item
@@ -203,7 +214,7 @@ export default {
     onMounted(async () => {
       //jwt로 보안 강화
       socket = new WebSocket(
-        `ws://3.38.151.156:8080/ws/notifications?userSysNo=${userSysNo}`
+        `ws://43.200.8.42:8080/ws/notifications?userSysNo=${userSysNo}`
       )
 
       socket.onmessage = (event) => {
@@ -366,10 +377,24 @@ export default {
 .notification-link {
   color: black;
   text-decoration: none; /* 기본 상태에서는 밑줄 없음 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* 활성화된 링크 상태 */
 .notification-link:active {
   color: #333; /* 활성화된 상태에서 색상 변경 (원하는 색상으로 변경 가능) */
   text-decoration: none; /* 활성화 상태에서는 밑줄 없앰 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-weight: bold;
 }
 </style>

@@ -248,6 +248,7 @@ export default {
 
     const getBoardDetail = async () => {
       const response = await boardAPI.getBoardDetail({
+        type: 'detail',
         searchList: { sysNo: sysNoParam },
         pageSize: 10,
         pageIndex: 0,
@@ -292,7 +293,7 @@ export default {
           ...comment,
           repliesVisible: false, // 초기에는 대댓글 숨김
         }))
-        if (response.data[0].likeFlag == 'Increase') {
+        if (response.data[0].likeFlag == 'like') {
           isLiked.value = true // 파란 버튼 (좋아요 누름)
         } else {
           isLiked.value = false // 흰 버튼 (좋아요 안 누름)
@@ -437,20 +438,18 @@ export default {
       if (isLiked.value) {
         //좋아요 누른 상황 -> 취소인 경우
         isLiked.value = false
-        await boardAPI.updateCount({
-          type: 'like',
-          action: 'Decrease',
-          sysNo: form.sysNo,
+        await boardAPI.updateLike({
+          action: 'unLike',
+          boardSysNo: form.sysNo,
           userId: userId,
           userSysNo: userSysNo,
         })
       } else {
         //좋아요 안누른 상황 -> 좋아요 누른 경우
         isLiked.value = true
-        await boardAPI.updateCount({
-          type: 'like',
-          action: 'Increase',
-          sysNo: form.sysNo,
+        await boardAPI.updateLike({
+          action: 'like',
+          boardSysNo: form.sysNo,
           userId: userId,
           userSysNo: userSysNo,
         })

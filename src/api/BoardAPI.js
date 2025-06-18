@@ -1,4 +1,4 @@
-const BASE_URL = 'http://3.38.151.156:8080/api/board/'
+const BASE_URL = 'http://43.200.8.42:8080/api/board/' //api/board/
 // const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
 
 export default {
@@ -6,6 +6,7 @@ export default {
   getBoardList: async function (requestData) {
     try {
       const token = localStorage.getItem('jwtToken')
+      console.log(token)
       const response = await fetch(BASE_URL + 'list', {
         method: 'POST',
         headers: {
@@ -317,6 +318,24 @@ export default {
     try {
       const token = localStorage.getItem('jwtToken')
       const response = await fetch(BASE_URL + 'update/notiList', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* 좋아요 로그 넣기 */
+  updateLike: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'updateLike', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

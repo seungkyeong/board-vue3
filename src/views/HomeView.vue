@@ -74,7 +74,14 @@ export default {
         const response = await boardAPI.login(form) // await 사용
         if (response?.success) {
           // 토큰 저장
-          const token = response.data
+          const token = response.data.accessToken
+
+          //확인
+          console.log('response.success: ' + response?.success)
+          console.log('response.data: ' + response?.data)
+          console.log(
+            'response.data.accessToken: ' + response?.data.accessToken
+          )
 
           const authStore = useAuthStore()
           authStore.login(token)

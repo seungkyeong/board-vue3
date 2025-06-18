@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, watch, computed } from 'vue'
 import { useAuthStore } from '../store/auth'
 import boardAPI from '../api/BoardAPI'
 import { ElMessageBox } from 'element-plus'
@@ -133,8 +133,8 @@ export default {
     })
 
     const userDetailDialogVisible = ref(props.userDetailVisible)
-    const userId = authStore.getUserId
-    const userSysNo = authStore.getUserSysNo
+    const userId = computed(() => authStore.getUserId)
+    const userSysNo = computed(() => authStore.getSysNo)
 
     // props.visible 변경 시 반영
     watch(
@@ -167,9 +167,10 @@ export default {
 
     //로드시 사용자 상세 조회
     const getUserDetail = async () => {
+      console.log('userSysNo: ' + userSysNo.value)
       const response = await boardAPI.userDetail({
-        id: userId,
-        sysNo: userSysNo,
+        id: userId.value,
+        userSysNo: userSysNo.value,
       })
       if (response.success) {
         form.id = response.data.id
