@@ -13,6 +13,7 @@ import LikeTopListView from '../views/LikeTopListView.vue'
 import ViewTopListView from '../views/ViewTopListView.vue'
 import MyBoardListView from '../views/MyBoardListView.vue'
 import MyLikeListView from '../views/MyLikeListView.vue'
+import ResetPassword from '../views/ResetPassword.vue'
 
 const routes = [
   {
@@ -84,6 +85,11 @@ const routes = [
     path: '/board/myLikeList',
     name: 'MyLikeListView',
     component: MyLikeListView,
+  },
+  {
+    path: '/board/resetPassword',
+    name: 'ResetPassword',
+    component: ResetPassword,
   },
 ]
 

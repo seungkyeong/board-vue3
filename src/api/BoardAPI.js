@@ -348,4 +348,38 @@ export default {
       console.error('Fetch error:', error)
     }
   },
+
+  /* 사용자 비밀번호 재설정 */
+  resetUserPw: async function (requestData) {
+    try {
+      const response = await fetch(BASE_URL + 'resetUserPw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
+
+  /* 댓글 삭제 */
+  deleteComment: async function (requestData) {
+    try {
+      const token = localStorage.getItem('jwtToken')
+      const response = await fetch(BASE_URL + 'commentDelete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      })
+      return await response.json()
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  },
 }

@@ -117,35 +117,28 @@ export default {
           type: 'warning',
         }).catch(() => {})
       } else {
-        if (form.currentPassword.trim() != toRefs(props).password.value) {
-          ElMessageBox.alert('현재 비밀번호를 제대로 입력해주세요!', '', {
+        //사용자 상세 수정 수행 API 호출
+        const response = await boardAPI.updateUserPw(form)
+        if (response.success) {
+          emit('update:password', form.newPassword)
+          form.currentPassword = ''
+          form.newPassword = ''
+
+          ElMessageBox.alert('저장되었습니다.', '', {
+            confirmButtonText: '확인',
+            type: 'success',
+          })
+            .then(() => {
+              closeDialog()
+            })
+            .catch(() => {
+              closeDialog()
+            })
+        } else {
+          ElMessageBox.alert(response.message, '', {
             confirmButtonText: '확인',
             type: 'warning',
           }).catch(() => {})
-        } else {
-          //사용자 상세 수정 수행 API 호출
-          const response = await boardAPI.updateUserPw(form)
-          if (response.success) {
-            emit('update:password', form.newPassword)
-            form.newPassword = ''
-            form.currentPassword = ''
-
-            ElMessageBox.alert('저장되었습니다.', '', {
-              confirmButtonText: '확인',
-              type: 'success',
-            })
-              .then(() => {
-                closeDialog()
-              })
-              .catch(() => {
-                closeDialog()
-              })
-          } else {
-            ElMessageBox.alert(response.message, '', {
-              confirmButtonText: '확인',
-              type: 'warning',
-            }).catch(() => {})
-          }
         }
       }
     }

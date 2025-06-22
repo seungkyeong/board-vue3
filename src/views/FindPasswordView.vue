@@ -7,7 +7,7 @@
       @click="toLogin"
     />
     <el-text class="find-text"
-      >비밀번호를 찾고자하는 아이디를 입력해주세요.</el-text
+      >비밀번호를 찾고자하는 아이디와 이메일을 입력해주세요.</el-text
     >
     <div class="form-section">
       <div class="form-container">
@@ -21,6 +21,21 @@
             >
               <template #prefix>
                 <el-icon><User /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
+          <el-form-item
+            prop="email"
+            :rules="[{ validator: validateEmail, trigger: 'blur' }]"
+          >
+            <el-input
+              v-model="form.email"
+              placeholder="이메일"
+              clearable
+              autofocus
+            >
+              <template #prefix>
+                <el-icon><Message /></el-icon>
               </template>
             </el-input>
           </el-form-item>
@@ -44,25 +59,29 @@ import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
 import { ElMessageBox } from 'element-plus'
-import { User } from '@element-plus/icons-vue'
+import { User, Message } from '@element-plus/icons-vue'
+import { useTempUserStore } from '../store/tempUser'
 
 export default {
   components: {
     User,
+    Message,
   },
   setup() {
+    const tempUserStore = useTempUserStore()
     const router = useRouter()
 
     const form = reactive({
       type: 'findPw',
       id: '',
+      email: '',
     })
 
     //로그인 버튼 클릭시 저장
     const signUp = async () => {
       //모든 필드를 입력했는지 확인
-      if (!form.id) {
-        ElMessageBox.alert('아이디를 입력해주세요!', '', {
+      if (!form.id || !form.email) {
+        ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
           confirmButtonText: '확인',
           type: 'warning',
         }).catch(() => {})
@@ -70,11 +89,10 @@ export default {
         //비밀번호 찾기 수행 API 호출
         const response = await boardAPI.findIdPw(form)
         if (response?.success) {
+          tempUserStore.setUserSysNo(response.data)
+
           router.push({
-            path: '/board/resultPw',
-            query: {
-              result: response.data,
-            },
+            path: '/board/resetPassword',
           })
         } else {
           ElMessageBox.alert(response.message, '', {
@@ -95,11 +113,24 @@ export default {
       router.push({ path: '/' })
     }
 
+    // 이메일 유효성 검사 함수
+    const validateEmail = (rule, value, callback) => {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!value) {
+        callback(new Error('이메일을 입력해주세요'))
+      } else if (!emailPattern.test(value)) {
+        callback(new Error('유효한 이메일 주소를 입력해주세요'))
+      } else {
+        callback()
+      }
+    }
+
     return {
       form,
       signUp,
       findId,
       toLogin,
+      validateEmail,
     }
   },
 }

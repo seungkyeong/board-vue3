@@ -250,7 +250,6 @@ export default {
         // 예: 서버에 요청 보내기, 로컬 데이터에서 삭제하기 등
         const response = await boardAPI.deleteLikeList({
           type: 'like',
-          action: 'Decrease',
           userId: userId,
           userSysNo: userSysNo,
           deleteList: selectedRows.value,
