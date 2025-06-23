@@ -1,65 +1,15 @@
 const BASE_URL = 'http://43.200.8.42:8080/api/board/' //api/board/
-// const token = localStorage.getItem('jwtToken') // 저장된 JWT 토큰 가져오기
 
 export default {
   /* 모든 게시물 조회 */
-  getBoardList: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      console.log(token)
-      const response = await fetch(BASE_URL + 'list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  getBoardList: (data) => commonFetch('list', data),
 
   /* 게시물 생성 */
-  createBoard: async function (requestData) {
-    const token = localStorage.getItem('jwtToken')
-    try {
-      const response = await fetch(BASE_URL + 'post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  createBoard: (data) => commonFetch('post', data),
 
   /* Presigned URL 발급 */
-  getPresignedURL: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'post/fileUpload', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: requestData, // Presigned URL 요청에 필요한 데이터
-      })
-      if (response.ok) {
-        const presignedUrls = await response.json()
-        return presignedUrls // 서버에서 받은 Presigned URL 반환
-      } else {
-        throw new Error('Get PresignedURL Fail.')
-      }
-    } catch (error) {
-      console.error('Get PresignedURL: ', error)
-    }
-  },
+  getPresignedURL: (data) =>
+    commonFetch('post/fileUpload', data, { raw: true }),
 
   /* S3 파일업로드 */
   uploadFile: async function (presignedUrl, file) {
@@ -84,302 +34,79 @@ export default {
   },
 
   /* 게시물 상세 조회 */
-  getBoardDetail: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'detail', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  getBoardDetail: (data) => commonFetch('detail', data),
 
   /* 회원가입 */
-  createUser: async function (requestData) {
-    try {
-      const response = await fetch(BASE_URL + 'signUp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  createUser: (data) => commonFetch('signUp', data, { noAuth: true }),
 
   /* 로그인 */
-  login: async function (requestData) {
-    try {
-      const response = await fetch(BASE_URL + 'login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  login: (data) => commonFetch('login', data, { noAuth: true }),
 
   /* 아이디&비밀번호 찾기 */
-  findIdPw: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'findIdPw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  findIdPw: (requestData) =>
+    commonFetch('findIdPw', requestData, { noAuth: true }),
 
   /* 사용자 상세 보기 */
-  userDetail: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'userDetail', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  userDetail: (requestData) => commonFetch('userDetail', requestData),
 
   /* 사용자 상세 수정 */
-  updateUserDetail: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'updateUserDetail', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  updateUserDetail: (requestData) =>
+    commonFetch('updateUserDetail', requestData),
 
   /* 사용자 비밀번호 수정 */
-  updateUserPw: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'updateUserPw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  updateUserPw: (requestData) => commonFetch('updateUserPw', requestData),
 
   /* View Count Redis에 적용 */
-  updateCount: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'updateCount', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  updateCount: (requestData) => commonFetch('updateCount', requestData),
 
   /* 댓글 생성 */
-  createComment: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'comment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  createComment: (requestData) => commonFetch('comment', requestData),
 
   /* S3 파일 삭제 */
-  deleteFiles: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'post/fileDelete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error: ', error)
-    }
-  },
+  deleteFiles: (requestData) => commonFetch('post/fileDelete', requestData),
 
   /* 게시물 리스트 삭제 */
-  deleteBoardList: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'boardDelete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error: ', error)
-    }
-  },
+  deleteBoardList: (requestData) => commonFetch('boardDelete', requestData),
 
   /* 좋아요 리스트 삭제(좋아요 취소) */
-  deleteLikeList: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'likeDelete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error: ', error)
-    }
-  },
+  deleteLikeList: (requestData) => commonFetch('likeDelete', requestData),
 
   /* 알림 조회 */
-  getNotiList: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'notiList', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  getNotiList: (requestData) => commonFetch('notiList', requestData),
 
   /* 알림 조회 */
-  updateNotiReadFlag: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'update/notiList', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  updateNotiReadFlag: (requestData) =>
+    commonFetch('update/notiList', requestData),
 
   /* 좋아요 로그 넣기 */
-  updateLike: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'updateLike', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  updateLike: (requestData) => commonFetch('updateLike', requestData),
 
   /* 사용자 비밀번호 재설정 */
-  resetUserPw: async function (requestData) {
-    try {
-      const response = await fetch(BASE_URL + 'resetUserPw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  resetUserPw: (requestData) =>
+    commonFetch('resetUserPw', requestData, { noAuth: true }),
 
   /* 댓글 삭제 */
-  deleteComment: async function (requestData) {
-    try {
-      const token = localStorage.getItem('jwtToken')
-      const response = await fetch(BASE_URL + 'commentDelete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      })
-      return await response.json()
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
-  },
+  deleteComment: (requestData) => commonFetch('commentDelete', requestData),
+}
+
+/* 공통 fetch */
+async function commonFetch(endpoint, data, options = {}) {
+  const token = localStorage.getItem('jwtToken')
+  const headers = {
+    ...(options.raw ? {} : { 'Content-Type': 'application/json' }),
+    ...(options.noAuth ? {} : { Authorization: `Bearer ${token}` }),
+    ...(options.headers || {}),
+  }
+
+  try {
+    const response = await fetch(BASE_URL + endpoint, {
+      method: options.method || 'POST',
+      headers,
+      body: options.raw ? data : JSON.stringify(data),
+    })
+    return await response.json()
+  } catch (error) {
+    console.error(`Fetch error at ${endpoint}:`, error)
+    throw error
+  }
 }
