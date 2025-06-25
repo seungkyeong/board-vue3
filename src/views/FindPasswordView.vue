@@ -4,14 +4,19 @@
       :src="require('@/assets/logo.png')"
       alt="logo Image"
       class="logo-image"
-      @click="toLogin"
+      @click="toGoPage(ROUTES.HOME)"
     />
     <el-text class="find-text"
       >비밀번호를 찾고자하는 아이디와 이메일을 입력해주세요.</el-text
     >
     <div class="form-section">
       <div class="form-container">
-        <el-form :model="form" label-width="auto" style="width: 100%">
+        <el-form
+          :model="form"
+          :rules="formRules"
+          label-width="auto"
+          style="width: 100%"
+        >
           <el-form-item>
             <el-input
               v-model="form.id"
@@ -24,10 +29,7 @@
               </template>
             </el-input>
           </el-form-item>
-          <el-form-item
-            prop="email"
-            :rules="[{ validator: validateEmail, trigger: 'blur' }]"
-          >
+          <el-form-item prop="email">
             <el-input
               v-model="form.email"
               placeholder="이메일"
@@ -40,14 +42,14 @@
             </el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="signUp" style="width: 100%"
+            <el-button type="primary" @click="findPw" style="width: 100%"
               >비밀번호 찾기</el-button
             >
           </el-form-item>
         </el-form>
       </div>
       <el-text class="id-text">아이디가 기억나지 않는다면? </el-text>
-      <el-button type="text" class="text" @click="findId"
+      <el-button type="text" class="text" @click="goToPage(ROUTES.FIND_ID)"
         >아이디 찾기</el-button
       >
     </div>
@@ -56,11 +58,14 @@
 
 <script>
 import { reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
-import { ElMessageBox } from 'element-plus'
 import { User, Message } from '@element-plus/icons-vue'
 import { useTempUserStore } from '../store/tempUser'
+import { showAlertBox } from '../utils/elementUtils'
+import { goToPage } from '../utils/routerUtils'
+import { ROUTES } from '../constant/routes'
+import { MESSAGES } from '../constant/messages'
+import { validateEmail } from '../utils/commonUtils'
 
 export default {
   components: {
@@ -69,7 +74,6 @@ export default {
   },
   setup() {
     const tempUserStore = useTempUserStore()
-    const router = useRouter()
 
     const form = reactive({
       type: 'findPw',
@@ -77,60 +81,35 @@ export default {
       email: '',
     })
 
-    //로그인 버튼 클릭시 저장
-    const signUp = async () => {
-      //모든 필드를 입력했는지 확인
+    /* 비밀번호 찾기 */
+    const findPw = async () => {
       if (!form.id || !form.email) {
-        ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        //모든 필드 입력 확인
+        showAlertBox(MESSAGES.REQUIRE_ALL_FIELDS, MESSAGES.WARNING)
       } else {
-        //비밀번호 찾기 수행 API 호출
+        //비밀번호 찾기 API 호출
         const response = await boardAPI.findIdPw(form)
         if (response?.success) {
           tempUserStore.setUserSysNo(response.data)
 
-          router.push({
-            path: '/board/resetPassword',
-          })
+          //비밀번호 재설정 화면 이동
+          goToPage(ROUTES.RESET_PASSWORD)
         } else {
-          ElMessageBox.alert(response.message, '', {
-            confirmButtonText: '확인',
-            type: 'error',
-          }).catch(() => {})
+          showAlertBox(response.message, MESSAGES.ERROR)
         }
       }
     }
 
-    //아이디 찾기 번호 클릭시
-    const findId = async () => {
-      router.push({ path: '/board/findid' })
-    }
-
-    //로고 클릭시
-    const toLogin = async () => {
-      router.push({ path: '/' })
-    }
-
-    // 이메일 유효성 검사 함수
-    const validateEmail = (rule, value, callback) => {
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!value) {
-        callback(new Error('이메일을 입력해주세요'))
-      } else if (!emailPattern.test(value)) {
-        callback(new Error('유효한 이메일 주소를 입력해주세요'))
-      } else {
-        callback()
-      }
-    }
+    /* 이메일 유효성 */
+    const formRules = { email: [{ validator: validateEmail, trigger: 'blur' }] }
 
     return {
       form,
-      signUp,
-      findId,
-      toLogin,
+      findPw,
       validateEmail,
+      goToPage,
+      ROUTES,
+      formRules,
     }
   },
 }

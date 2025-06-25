@@ -1,0 +1,14 @@
+export const MESSAGES = {
+  REQUIRE_ALL_FIELDS: '모든 필드를 입력해주세요!',
+  REQUIRE_EMAIL_FIELDS: '이메일을 입력해주세요!',
+  FAILED_LOGIN: '로그인에 실패하였습니다.',
+  FAILED_CHANGE_PW: '비밀번호 재설정에 실패하였습니다.',
+  SUCCESS_SAVE: '저장되었습니다.',
+  SUCCESS_CHANGE_PW: '비밀번호 변경이 완료되었습니다.',
+  INVALID_EMAIL: '유효한 이메일 주소를 입력해주세요.',
+  CONFIRM: '확인',
+  DELETE: '삭제',
+  ERROR: 'error',
+  SUCCESS: 'success',
+  WARNING: 'warning',
+}

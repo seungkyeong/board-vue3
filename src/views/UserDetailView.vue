@@ -89,8 +89,6 @@
   <!-- 비밀번호 변경 팝업 연결-->
   <UserPwChangeView
     v-model:userPwChangeVisible="isUserPwChangeVisible"
-    @update:userPwChangeVisible="handleUserPwChangeClose"
-    @update:password="updatePassword"
     :sysNo="form.sysNo"
     :password="password"
   />
@@ -100,9 +98,10 @@
 import { reactive, ref, watch, computed } from 'vue'
 import { useAuthStore } from '../store/auth'
 import boardAPI from '../api/BoardAPI'
-import { ElMessageBox } from 'element-plus'
 import { User, Iphone, Message } from '@element-plus/icons-vue'
-import UserPwChangeView from '../views/UserPwChangeView.vue' // DetailView 컴포넌트 임포트
+import UserPwChangeView from '../views/UserPwChangeView.vue'
+import { MESSAGES } from '../constant/messages'
+import { showAlertBox } from '../utils/elementUtils'
 
 export default {
   components: {
@@ -117,11 +116,14 @@ export default {
       required: true,
     },
   },
-  emits: ['update:userDetailVisible'], // 명시적으로 정의
+  emits: ['update:userDetailVisible'],
   setup(props, { emit }) {
     const authStore = useAuthStore()
-    const isUserPwChangeVisible = ref(false)
 
+    const isUserPwChangeVisible = ref(false) //사용자 비밀번호 변경 창 표시 여부
+    const userDetailDialogVisible = ref(props.userDetailVisible) //사용자 상세 정보 창 표시 여부
+    const userId = computed(() => authStore.getUserId)
+    const userSysNo = computed(() => authStore.getSysNo)
     let password = ref('')
 
     const form = reactive({
@@ -132,40 +134,30 @@ export default {
       sysNo: '',
     })
 
-    const userDetailDialogVisible = ref(props.userDetailVisible)
-    const userId = computed(() => authStore.getUserId)
-    const userSysNo = computed(() => authStore.getSysNo)
-
-    // props.visible 변경 시 반영
+    /* 사용자 상세 정보 창 표시 여부(userDetailVisible) 변경 시 반영 */
     watch(
       () => props.userDetailVisible,
       (newVal) => {
         userDetailDialogVisible.value = newVal
         if (newVal) {
-          // 다이얼로그가 열릴 때만 API 호출
+          // 다이얼로그가 열릴 때만 사용자 상세 정보 조회 API 호출
           getUserDetail()
         }
       }
     )
 
+    /* 사용자 정보 상세 Dialog 닫기 */
     const closeDialog = () => {
-      emit('update:userDetailVisible', false) // 부모에게 visible=false를 전달
+      //Profile(부모)에 사용자 정보 상세 보기 false로 전달
+      emit('update:userDetailVisible', false)
     }
 
-    // 프로필 상세 페이지로 이동
+    /* 사용자 비밀번호 변경 화면 이동 */
     const pwChange = () => {
       isUserPwChangeVisible.value = true
     }
 
-    const handleUserPwChangeClose = (value) => {
-      isUserPwChangeVisible.value = value
-    }
-
-    const updatePassword = (value) => {
-      password.value = value
-    }
-
-    //로드시 사용자 상세 조회
+    /* 사용자 정보 상세 조회 */
     const getUserDetail = async () => {
       console.log('userSysNo: ' + userSysNo.value)
       const response = await boardAPI.userDetail({
@@ -182,33 +174,24 @@ export default {
       }
     }
 
-    //수정 버튼 클릭시 저장
+    /* 사용자 상세 정보 수정 */
     const modify = async () => {
-      //모든 필드를 입력했는지 확인
       if (!form.id || !form.name || !form.phone || !form.email) {
-        ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        //모든 필드 입력 확인
+        await showAlertBox(MESSAGES.REQUIRE_ALL_FIELDS, MESSAGES.WARNING).catch(
+          () => {}
+        )
       } else {
-        //사용자 상세 수정 수행 API 호출
+        //사용자 상세 수정 API 호출
         const response = await boardAPI.updateUserDetail(form)
         if (response.success) {
-          ElMessageBox.alert('저장되었습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'success',
-          })
-            .then(() => {
+          await showAlertBox(MESSAGES.SUCCESS_SAVE, MESSAGES.SUCCESS).finally(
+            () => {
               closeDialog()
-            })
-            .catch(() => {
-              closeDialog()
-            })
+            }
+          )
         } else {
-          ElMessageBox.alert(response.message, '', {
-            confirmButtonText: '확인',
-            type: 'warning',
-          }).catch(() => {})
+          await showAlertBox(response.message, MESSAGES.WARNING).catch(() => {})
         }
       }
     }
@@ -219,11 +202,9 @@ export default {
       userDetailDialogVisible,
       closeDialog,
       userId,
-      handleUserPwChangeClose,
       pwChange,
       getUserDetail,
       isUserPwChangeVisible,
-      updatePassword,
       password,
     }
   },
@@ -235,10 +216,10 @@ export default {
     padding: 100px 600px 100px 600px;
 }
 .form-container{
-  border: 2px solid #c8c8c8; /* 테두리 추가 */
-  border-radius: 10px; /* 모서리 둥글게 */
-  padding: 20px 20px 8px 20px; /* 내부 여백 */
-  margin: 20px; /* 외부 여백 추가 */
+  border: 2px solid #c8c8c8; 
+  border-radius: 10px;
+  padding: 20px 20px 8px 20px;
+  margin: 20px;
 }
 .modify_text{
  font-size: 18px; 
@@ -246,7 +227,7 @@ export default {
 }
 .button-container{
   display: flex;
-  justify-content: space-between; /* 버튼을 양쪽으로 나눔 */
-  width: 100%; /* 부모의 너비를 100%로 설정 */
+  justify-content: space-between;
+  width: 100%; 
 }
 </style>

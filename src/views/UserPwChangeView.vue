@@ -62,8 +62,9 @@
 import { reactive, ref, watch, toRefs } from 'vue'
 import { useAuthStore } from '../store/auth'
 import boardAPI from '../api/BoardAPI'
-import { ElMessageBox } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
+import { MESSAGES } from '../constant/messages'
+import { showAlertBox } from '../utils/elementUtils'
 
 export default {
   components: {
@@ -74,20 +75,16 @@ export default {
       type: Boolean,
       required: true,
     },
-    password: {
-      type: String,
-      required: true,
-    },
     sysNo: {
       type: String,
       required: true,
     },
   },
-  emits: ['update:userPwChangeVisible', 'update:password'], // 명시적으로 정의
+  emits: ['update:userPwChangeVisible'],
   setup(props, { emit }) {
     const authStore = useAuthStore()
 
-    const userPwChangeDialogVisible = ref(props.userPwChangeVisible)
+    const userPwChangeDialogVisible = ref(props.userPwChangeVisible) //사용자 비밀번호 변경 창 표시 여부
     const userId = authStore.getUserId
 
     const form = reactive({
@@ -96,7 +93,7 @@ export default {
       sysNo: toRefs(props).sysNo,
     })
 
-    // props.visible 변경 시 반영
+    /* 비밀번호 변경 창 표시 여부(userPwChangeDialogVisible) 변경 시 반영 */
     watch(
       () => props.userPwChangeVisible,
       (newVal) => {
@@ -104,41 +101,32 @@ export default {
       }
     )
 
+    /* 비밀번호 변경 Dialog 닫기 */
     const closeDialog = () => {
-      emit('update:userPwChangeVisible', false) // 부모에게 visible=false를 전달
+      emit('update:userPwChangeVisible', false)
     }
 
-    //수정 버튼 클릭시 저장
+    /* 비밀번호 수정 */
     const modify = async () => {
-      //모든 필드를 입력했는지 확인
       if (!form.currentPassword || !form.newPassword) {
-        ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        //모든 필드 입력 확인
+        await showAlertBox(MESSAGES.REQUIRE_ALL_FIELDS, MESSAGES.WARNING).catch(
+          () => {}
+        )
       } else {
-        //사용자 상세 수정 수행 API 호출
+        //사용자 비밀번호 수정 API 호출
         const response = await boardAPI.updateUserPw(form)
         if (response.success) {
-          emit('update:password', form.newPassword)
           form.currentPassword = ''
           form.newPassword = ''
 
-          ElMessageBox.alert('저장되었습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'success',
-          })
-            .then(() => {
+          await showAlertBox(MESSAGES.SUCCESS_SAVE, MESSAGES.SUCCESS).finally(
+            () => {
               closeDialog()
-            })
-            .catch(() => {
-              closeDialog()
-            })
+            }
+          )
         } else {
-          ElMessageBox.alert(response.message, '', {
-            confirmButtonText: '확인',
-            type: 'warning',
-          }).catch(() => {})
+          await showAlertBox(response.message, MESSAGES.WARNING).catch(() => {})
         }
       }
     }
@@ -159,10 +147,10 @@ export default {
     padding: 100px 600px 100px 600px;
 }
 .form-container{
-  border: 2px solid #c8c8c8; /* 테두리 추가 */
-  border-radius: 10px; /* 모서리 둥글게 */
-  padding: 20px 20px 8px 20px; /* 내부 여백 */
-  margin: 20px; /* 외부 여백 추가 */
+  border: 2px solid #c8c8c8; 
+  border-radius: 10px; 
+  padding: 20px 20px 8px 20px; 
+  margin: 20px; 
 }
 .modify_text{
  font-size: 18px; 
@@ -170,7 +158,7 @@ export default {
 }
 .button-container{
   display: flex;
-  justify-content: space-between; /* 버튼을 양쪽으로 나눔 */
-  width: 100%; /* 부모의 너비를 100%로 설정 */
+  justify-content: space-between;
+  width: 100%; 
 }
 </style>

@@ -594,7 +594,7 @@ export default {
     const createComment = async (comment = null) => {
       let response
       //댓글, 대댓글 수정
-      if ((comment != null) & comment.editCommentToggle) {
+      if (comment != null && comment.editCommentToggle) {
         newReply.comment = comment.editText
         newReply.sysNo = comment.sysNo
         newReply.parSysNo = comment.parSysNo

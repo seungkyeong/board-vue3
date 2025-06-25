@@ -42,11 +42,13 @@
 
 <script>
 import { reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
-import { ElMessageBox } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
 import { useTempUserStore } from '../store/tempUser'
+import { showAlertBox } from '../utils/elementUtils'
+import { goToPage } from '../utils/routerUtils'
+import { ROUTES } from '../constant/routes'
+import { MESSAGES } from '../constant/messages'
 
 export default {
   components: {
@@ -54,7 +56,6 @@ export default {
   },
   setup() {
     const tempUserStore = useTempUserStore()
-    const router = useRouter()
 
     const userSysNo = tempUserStore.getUserSysNo
 
@@ -64,30 +65,28 @@ export default {
       confirmPassword: '',
     })
 
-    //비밀번호 재설정 버튼 클릭시 저장
+    /* 비밀번호 재설정 */
     const resetPassword = async () => {
-      //제목, 내용 입력했는지 확인
       if (!form.newPassword || !form.confirmPassword) {
-        ElMessageBox.alert('모든 필드를 입력해주세요!', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        //모든 필드 입력 확인
+        await showAlertBox(MESSAGES.REQUIRE_ALL_FIELDS, MESSAGES.WARNING).catch(
+          () => {}
+        )
       } else {
-        //비밀번호 재설정 수행 API 호출
+        //비밀번호 재설정 API 호출
         const response = await boardAPI.resetUserPw(form)
         if (response?.success) {
-          ElMessageBox.alert('비밀번호 변경이 완료되었습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'success',
-          }).catch(() => {})
+          await showAlertBox(
+            MESSAGES.SUCCESS_CHANGE_PW,
+            MESSAGES.SUCCESS
+          ).catch(() => {})
 
           // 로그인 페이지로 이동
-          router.push({ path: '/' })
+          goToPage(ROUTES.HOME)
         } else {
-          ElMessageBox.alert('비밀번호 재설정에 실패하였습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'error',
-          }).catch(() => {})
+          await showAlertBox(MESSAGES.FAILED_CHANGE_PW, MESSAGES.ERROR).catch(
+            () => {}
+          )
         }
       }
     }
@@ -95,6 +94,8 @@ export default {
     return {
       form,
       resetPassword,
+      goToPage,
+      ROUTES,
     }
   },
 }
@@ -103,22 +104,22 @@ export default {
 <style scoped>
 .container {
   padding: 100px 500px 100px 500px;
-  display: flex; /* 플렉스박스 사용 */
-  flex-direction: column; /* 세로 방향으로 정렬 */
-  align-items: center; /* 수평 중앙 정렬 */
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
 }
 .reset-text{
-  font-size: 23px; /* 텍스트 크기 증가 */
-  font-weight: bold; /* 텍스트 굵게 */
-  text-align: center; /* 텍스트 중앙 정렬 */
-  width: 100%; /* 중앙 정렬을 위해 width를 100%로 설정 */
+  font-size: 23px; 
+  font-weight: bold;
+  text-align: center; 
+  width: 100%; 
   padding: 0 0 10px 0;
 }
 .form-container{
-  border: 2px solid #c8c8c8; /* 테두리 추가 */
-  border-radius: 10px; /* 모서리 둥글게 */
-  padding: 20px 20px 8px 20px; /* 내부 여백 */
-  margin: 20px; /* 외부 여백 추가 */
+  border: 2px solid #c8c8c8;
+  border-radius: 10px; 
+  padding: 20px 20px 8px 20px; 
+  margin: 20px; 
   width: 300px;
 }
 </style>

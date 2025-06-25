@@ -1,0 +1,17 @@
+export const ROUTES = {
+  HOME: '/',
+  SIGNUP: '/board/signup',
+  FIND_PASSWORD: '/board/findpassword',
+  FIND_ID: '/board/findid',
+  RESULT_PASSWORD: '/board/resultPw',
+  RESULT_ID: '/board/resultId',
+  RESET_PASSWORD: '/board/resetPassword',
+  DETAIL_USER: '/board/userDetail',
+  BOARD_LIST: '/board/list',
+  LIKE_TOP_BOARD_LIST: '/board/likeTopList',
+  VIEW_TOP_BOARD_LIST: '/board/viewTopList',
+  MY_BOARD_LIST: '/board/myBoardList',
+  MY_LIKE_BOARD_LIST: '/board/myLikeList',
+  CREATE_BOARD: '/board/post',
+  DETAIL_BOARD: '/board/detail/:sysNo',
+}
