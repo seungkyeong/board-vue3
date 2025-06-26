@@ -13,5 +13,5 @@ export const ROUTES = {
   MY_BOARD_LIST: '/board/myBoardList',
   MY_LIKE_BOARD_LIST: '/board/myLikeList',
   CREATE_BOARD: '/board/post',
-  DETAIL_BOARD: '/board/detail/:sysNo',
+  DETAIL_BOARD: '/board/detail',
 }
