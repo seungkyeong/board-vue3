@@ -26,18 +26,9 @@
 
     <!-- 페이징 컴포넌트 -->
     <div class="paging-container">
-      <!-- <el-pagination
+      <PagingComp
         :total="allBoardListCount"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        @current-change="chagePaging"
-        layout="prev, pager, next, jumper"
-      /> -->
-      <PagingComponent
-        :total="allBoardListCount"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        @update:currentPage="chagePaging"
+        v-model:currentPage="currentPage"
       />
     </div>
   </div>
@@ -45,18 +36,18 @@
 
 <script>
 import UserProfile from '../components/Profile'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
 import { goToPage } from '../utils/routerUtils'
 import { ROUTES } from '../constant/routes'
-import PagingComponent from '../components/Paging.vue'
+import PagingComp from '../components/PagingComp.vue'
 import BoardList from '../components/BoardList.vue'
 
 export default {
   components: {
     UserProfile,
-    PagingComponent,
+    PagingComp,
     BoardList,
   },
   setup() {
@@ -66,8 +57,8 @@ export default {
 
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
-    const currentPage = ref(1)
-    const pageSize = 10
+    const currentPage = ref(1) //현재 게시글 페이지
+    const pageSize = 10 //한 페이지에 표시할 게시글 개수
 
     /* 테이블 컬럼 정의 */
     const tableColumns = [
@@ -110,12 +101,6 @@ export default {
       getBoardList(filters)
     }
 
-    /* 페이지 변경시, currentPage 업데이트 -- Paging 객체로 옮기기 */
-    const chagePaging = (page) => {
-      currentPage.value = page
-      getSearchBoardList()
-    }
-
     /* 행 클릭시 게시글 상세 페이지 이동 */
     const goToDetailPage = async (row) => {
       await boardAPI.updateCount({
@@ -141,6 +126,11 @@ export default {
       return currentPage.value - 1
     }
 
+    /* currentPage 변경 감지하여 게시글 조회 */
+    watch(currentPage, () => {
+      getBoardList()
+    })
+
     return {
       boardList,
       currentPage,
@@ -149,7 +139,6 @@ export default {
       goToDetailPage,
       getBoardList,
       getSearchBoardList,
-      chagePaging,
       getRowClassName,
       goToPage,
       ROUTES,

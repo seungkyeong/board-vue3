@@ -26,12 +26,9 @@
 
     <!-- 페이징 컴포넌트 -->
     <div class="paging-container">
-      <el-pagination
+      <PagingComp
         :total="allBoardListCount"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        @current-change="chagePaging"
-        layout="prev, pager, next, jumper"
+        v-model:currentPage="currentPage"
       />
     </div>
   </div>
@@ -39,7 +36,7 @@
 
 <script>
 import UserProfile from '../components/Profile'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
 import { goToPage } from '../utils/routerUtils'
@@ -47,11 +44,13 @@ import { ROUTES } from '../constant/routes'
 import BoardList from '../components/BoardList.vue'
 import { MESSAGES } from '../constant/messages'
 import { showAlertBox } from '../utils/elementUtils'
+import PagingComp from '../components/PagingComp.vue'
 
 export default {
   components: {
     UserProfile,
     BoardList,
+    PagingComp,
   },
   setup() {
     const authStore = useAuthStore()
@@ -105,12 +104,6 @@ export default {
       getBoardList(filters)
     }
 
-    /* 페이지 변경시, currentPage 업데이트 -- Paging 객체로 옮기기 */
-    const chagePaging = (page) => {
-      currentPage.value = page
-      getSearchBoardList()
-    }
-
     /* 행 클릭시 게시글 상세 페이지 이동 */
     const goToDetailPage = async (row) => {
       await boardAPI.updateCount({
@@ -153,6 +146,11 @@ export default {
       return currentPage.value - 1
     }
 
+    /* currentPage 변경 감지하여 게시글 조회 */
+    watch(currentPage, () => {
+      getBoardList()
+    })
+
     return {
       boardList,
       currentPage,
@@ -161,7 +159,6 @@ export default {
       goToDetailPage,
       getBoardList,
       getSearchBoardList,
-      chagePaging,
       deleteSelected,
       selectedRows,
       goToPage,
