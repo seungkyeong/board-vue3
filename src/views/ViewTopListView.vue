@@ -16,6 +16,8 @@
       <BoardList
         :data="boardList"
         :columns="tableColumns"
+        :useSelection="false"
+        :useIndex="true"
         :row-class-name="getRowClassName"
         @search="getSearchBoardList"
         @rowClick="goToDetailPage"

@@ -16,6 +16,8 @@
       <BoardList
         :data="boardList"
         :columns="tableColumns"
+        :useSelection="false"
+        :useIndex="true"
         @search="getSearchBoardList"
         @rowClick="goToDetailPage"
       />
@@ -53,7 +55,6 @@ export default {
     const userId = authStore.getUserId
     const userSysNo = authStore.getSysNo
 
-    const hiddenFlag = ref(false) //false로 설정
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
     const currentPage = ref(1)
@@ -126,7 +127,6 @@ export default {
     return {
       boardList,
       currentPage,
-      hiddenFlag,
       pageSize,
       allBoardListCount,
       goToDetailPage,
@@ -144,8 +144,8 @@ export default {
 <style scoped>
 .button-container {
   display: flex;
-  justify-content: flex-end; /* 버튼을 오른쪽으로 정렬 */
-  margin: 10px 0; /* 필요에 따라 여백 추가 */
+  justify-content: flex-end; 
+  margin: 10px 0; 
 }
 .container {
   padding: 0px 200px 30px 200px;

@@ -4,15 +4,26 @@
     border
     style="width: 100%"
     @row-click="onRowClick"
+    @selection-change="onSelectionChange"
     :row-class-name="props.rowClassName || (() => '')"
   >
+    <!-- 체크박스 -->
     <el-table-column
+      v-if="props.useSelection"
+      type="selection"
+      width="40"
+    ></el-table-column>
+
+    <!-- 인덱스 박스 -->
+    <el-table-column
+      v-if="props.useIndex"
       type="index"
       label=""
       width="50"
       align="center"
     ></el-table-column>
 
+    <!-- 컬럼 -->
     <template v-for="(col, idx) in props.columns" :key="idx">
       <el-table-column
         v-if="!col.hidden"
@@ -21,6 +32,7 @@
         :width="col.width"
         show-overflow-tooltip
       >
+        <!-- 헤더 -->
         <template #header>
           <div class="header-container">
             {{ col.label }}
@@ -40,6 +52,7 @@
           />
         </template>
 
+        <!-- 데이터 -->
         <template #default="scope">
           {{ scope.row[col.prop] }}
         </template>
@@ -57,9 +70,11 @@ const props = defineProps({
   columns: Array,
   hiddenFlag: Boolean,
   rowClassName: Function,
+  useSelection: Boolean,
+  useIndex: Boolean,
 })
 
-const emit = defineEmits(['rowClick', 'search'])
+const emit = defineEmits(['rowClick', 'search', 'select-sysnos'])
 const visibleSearch = reactive({}) //검색 아이콘 토글 여부(표시 여부)
 const searchFilters = reactive({}) //검색란 텍스트
 
@@ -85,6 +100,12 @@ function onSearchEnter() {
 /* 행 클릭시 부모 전달 */
 async function onRowClick(row) {
   emit('rowClick', row)
+}
+
+/* 체크박스 선택 변경시 sysNo 추출하여 부모 전달 */
+function onSelectionChange(selection) {
+  const sysNos = selection.map((row) => row.sysNo)
+  emit('select-sysnos', sysNos)
 }
 </script>
 
