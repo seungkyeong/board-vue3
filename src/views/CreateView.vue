@@ -22,26 +22,8 @@
         />
       </el-form-item>
       <el-form-item label="이미지">
-        <el-upload
-          drag
-          :auto-upload="false"
-          multiple
-          style="width: 100%"
-          accept="image/*"
-          :on-change="addImgPath"
-          :on-remove="removeImgPath"
-          :on-preview="imgPreview"
-        >
-          <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-          <div class="el-upload__text">
-            Drop file here or <em>click to upload</em>
-          </div>
-          <template #tip>
-            <div class="el-upload__tip">
-              jpg/png files with a size less than 500kb
-            </div>
-          </template>
-        </el-upload>
+        <!-- 파일 업로드 컴포넌트 -->
+        <ImageUploader v-model:files="files" @preview="imgPreview" />
       </el-form-item>
     </el-form>
     <div class="button-container">
@@ -58,24 +40,25 @@
 
 <script>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { UploadFilled } from '@element-plus/icons-vue'
 import boardAPI from '../api/BoardAPI'
-import { ElMessageBox } from 'element-plus'
 import UserProfile from '../components/Profile'
 import { useAuthStore } from '../store/auth'
+import { MESSAGES } from '../constant/messages'
+import { showAlertBox } from '../utils/elementUtils'
+import { ROUTES } from '../constant/routes'
+import { goToPage, goBack } from '../utils/routerUtils'
+import ImageUploader from '../components/ImageUploadComp.vue'
 
 export default {
   components: {
-    UploadFilled,
     UserProfile,
+    ImageUploader,
   },
   setup() {
-    const previewImage = ref('')
-    const router = useRouter()
-    const dialogVisible = ref(false)
-    const authStore = useAuthStore()
+    const previewImage = ref('') //미리보기 이미지 URL
+    const dialogVisible = ref(false) //미리보기 표시 여부
 
+    const authStore = useAuthStore()
     const userId = authStore.getUserId
     const userSysNo = authStore.getSysNo
 
@@ -84,86 +67,57 @@ export default {
       content: '',
       userId: userId,
       userSysNo: userSysNo,
-      // imgPath: '',
       imgPath: [],
     })
 
-    let fileData = new FormData()
-    let imgPath = []
+    const files = ref([]) // File 객체 배열(업로드할 파일 목록)
 
-    //취소버튼 클릭시 이전 페이지로 이동
-    const goBack = () => {
-      router.go(-1)
-    }
-
-    //저장버튼 클릭시 저장
+    /* 게시글 저장 */
     const saveBoard = async () => {
-      //제목, 내용 입력했는지 확인
       if (!form.title || !form.content) {
-        ElMessageBox.alert('제목과 내용을 입력해주세요!', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        //모든 필드 입력 확인
+        await showAlertBox(MESSAGES.REQUIRE_ALL_FIELDS, MESSAGES.WARNING).catch(
+          () => {}
+        )
       } else {
-        //파일 업로드 수행 API 호출
-        if (fileData.has('files')) {
+        //이미지 업로드 파일이 있는 경우
+        if (files.value.length > 0) {
+          // FormData 생성
+          const formData = new FormData()
+          files.value.forEach((file) => formData.append('files', file))
+
           //S3에서 PresignedURL 발급
-          const presignedURLs = await boardAPI.getPresignedURL(fileData)
-          //S3에 업로드
-          const files = fileData.getAll('files')
-          // console.log('presignedURLs.length ' + presignedURLs.length)
+          const presignedURLs = await boardAPI.getPresignedURL(formData)
+
+          const imgPath = []
           for (let i = 0; i < presignedURLs.length; i++) {
-            const file = files[i] // FormData에서 해당 파일 가져오기
-            // S3에 파일 업로드
+            const file = files.value[i]
+
+            //S3에 파일 업로드
             const response = await boardAPI.uploadFile(presignedURLs[i], file)
-            //파일 이름만 저장
+
+            //파일 이름만 추출하여 imgPath에 저장
             imgPath.push(decodeURIComponent(response.split('/')[3]))
           }
           form.imgPath = imgPath
         }
 
-        //저장 수행 API 호출
+        //저장 API 호출
         const response = await boardAPI.createBoard(form)
-        try {
-          if (response.success) {
-            ElMessageBox.alert('저장되었습니다.', '', {
-              confirmButtonText: '확인',
-              type: 'success',
-            })
-            router.go(-1)
-          } else {
-            ElMessageBox.alert(response.message, '', {
-              confirmButtonText: '확인',
-              type: 'warning',
-            })
-            router.go(-1)
-          }
-        } catch (error) {
-          router.push({ path: '/board/list' })
-          console.error('Fail:', error)
+        if (response.success) {
+          await showAlertBox(MESSAGES.SUCCESS_SAVE, MESSAGES.SUCCESS).catch(
+            () => {}
+          )
+        } else {
+          await showAlertBox(response.message, MESSAGES.WARNING).catch(() => {})
         }
+        goToPage(ROUTES.BOARD_LIST)
       }
     }
 
-    //업로드 영역에 파일 추가시 제목을 imgPath에 넣음
-    const addImgPath = (file) => {
-      fileData.append('files', file.raw)
-    }
-
-    //업로드 영역에 파일 제거시 제목을 imgPath에서 제거
-    const removeImgPath = (file) => {
-      const newFileData = new FormData()
-      for (const [key, value] of fileData.entries()) {
-        if (value !== file.raw) {
-          newFileData.append(key, value) // 기존 파일 중 삭제 대상이 아닌 파일만 추가
-        }
-      }
-      fileData = newFileData // 기존 FormData 교체
-    }
-
-    //업로드한 파일 클릭시 파일 미리보기
-    const imgPreview = (file) => {
-      previewImage.value = file.url || URL.createObjectURL(file.raw) // 로컬 URL 생성
+    /* 업로드한 파일 클릭시 파일 미리보기 */
+    const imgPreview = (url) => {
+      previewImage.value = url
       dialogVisible.value = true
     }
 
@@ -171,12 +125,10 @@ export default {
       goBack,
       form,
       saveBoard,
-      addImgPath,
-      removeImgPath,
-      fileData,
       imgPreview,
       previewImage,
       dialogVisible,
+      files,
     }
   },
 }
