@@ -47,28 +47,13 @@
         >
           이미지 없음
         </div>
-        <el-upload
-          drag
-          :auto-upload="false"
-          multiple
-          style="width: 100%"
-          accept="image/*"
-          :on-change="addImgPath"
-          :on-remove="removeImgPath"
-          :on-preview="imgPreview"
+        <!-- 파일 업로드 컴포넌트 -->
+        <ImageUploader
           v-if="!editBoardToggle"
-          :file-list="fileList"
-        >
-          <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-          <div class="el-upload__text">
-            Drop file here or <em>click to upload</em>
-          </div>
-          <template #tip>
-            <div class="el-upload__tip">
-              jpg/png files with a size less than 500kb
-            </div>
-          </template>
-        </el-upload>
+          v-model:files="files"
+          @preview="imgPreview"
+          @delete-existing="deletedImage"
+        />
       </el-form-item>
       <el-form-item label="" class="like-wrapper">
         <div class="like-container" v-if="editBoardToggle">
@@ -302,39 +287,39 @@
 <script>
 import UserProfile from '../components/Profile'
 import { reactive, onMounted, ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
+import { useRoute } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
-import {
-  UploadFilled,
-  MoreFilled,
-  WarningFilled,
-} from '@element-plus/icons-vue'
+import { MoreFilled, WarningFilled } from '@element-plus/icons-vue'
+import { goBack } from '../utils/routerUtils'
+import { showConfirmBox, showAlertBox } from '../utils/elementUtils'
+import { MESSAGES } from '../constant/messages'
+import ImageUploader from '../components/ImageUploadComp.vue'
 
 export default {
   components: {
     UserProfile,
-    UploadFilled,
     MoreFilled,
     WarningFilled,
+    ImageUploader,
   },
   setup() {
-    const router = useRouter()
     const route = useRoute()
-    const authStore = useAuthStore()
     const sysNoParam = route.params.sysNo // URL 경로에서 sysNo를 가져옴
+
+    const authStore = useAuthStore()
     const userId = authStore.getUserId
     const userSysNo = authStore.getSysNo
+
     const editBoardToggle = ref(true)
-    let deletedImages = ref([]) // 삭제된 기존 이미지 추적
-    let fileData = new FormData()
+    let deletedImages = ref([]) // 삭제된 기존 이미지
     const previewImage = ref('')
     const dialogVisible = ref(false)
-    let fileList = ref([])
     const commentList = ref([])
     const replyInputs = reactive({})
     const isLiked = ref(false) // 좋아요 상태
+
+    const files = ref([]) // CustomUpload v-model로 바인딩할 files 배열
 
     //Board Detail Form
     const form = reactive({
@@ -372,6 +357,7 @@ export default {
       boardCreaterSysNo: '',
     })
 
+    /* 게시글 상세 조회 */
     const getBoardDetail = async () => {
       const response = await boardAPI.getBoardDetail({
         type: 'detail',
@@ -383,20 +369,20 @@ export default {
       })
 
       if (response.success) {
-        //s3에서 가져오기
+        //업로드 이미지가 있는 경우
         if (
           response.data[0].imgPath.length > 0 &&
           response.data[0].imgPath[0] != ''
         ) {
           const prefix = 'https://demofille.s3.ap-northeast-2.amazonaws.com/'
           for (let i = 0; i < response.data[0].imgPath.length; i++) {
+            //form.imgPath에 S3 경로 넣기
             form.imgPath.push(prefix + response.data[0].imgPath[i])
           }
-          updateFileList()
+          toUploadFileList()
         }
 
         //게시물 상세 세팅
-        //이미지 파일 이름 배열로 저장
         form.sysNo = response.data[0].sysNo
         form.title = response.data[0].title
         form.content = response.data[0].content
@@ -433,10 +419,7 @@ export default {
           isLiked.value = false // 흰 버튼 (좋아요 안 누름)
         }
       } else {
-        ElMessageBox.alert(response.message, '', {
-          confirmButtonText: '확인',
-          type: 'error',
-        }).catch(() => {})
+        await showAlertBox(response.message, MESSAGES.ERROR).catch(() => {})
       }
     }
 
@@ -445,124 +428,114 @@ export default {
       getBoardDetail()
     })
 
-    //취소버튼 클릭시 이전 페이지로 이동
-    const goBack = () => {
-      router.go(-1)
-    }
-
-    //업로드 영역에 파일 추가시 제목을 imgPath에 넣음
-    const addImgPath = (file) => {
-      fileData.append('files', file.raw)
-    }
-
-    //업로드 영역에 파일 제거시 제목을 imgPath에서 제거
-    const removeImgPath = (file) => {
-      if (file.url) {
-        // 기존 이미지 삭제 시 deletedImages에 추가
-        deletedImages.value.push(file.url)
-        form.imgPath = form.imgPath.filter((img) => img !== file.url)
-      } else {
-        const newFileData = new FormData()
-        for (const [key, value] of fileData.entries()) {
-          if (value !== file.raw) {
-            newFileData.append(key, value) // 기존 파일 중 삭제 대상이 아닌 파일만 추가
-          }
-        }
-        fileData = newFileData // 기존 FormData 교체
-      }
-    }
-
-    //업로드한 파일 클릭시 파일 미리보기
-    const imgPreview = (file) => {
-      previewImage.value = file.url || URL.createObjectURL(file.raw) // 로컬 URL 생성
+    /* 업로드한 파일 클릭시 파일 미리보기 */
+    const imgPreview = (url) => {
+      previewImage.value = url
       dialogVisible.value = true
     }
 
-    const updateFileList = () => {
-      const updatedList = form.imgPath.map((url, index) => {
-        const fileName = url.split('/')[3] // 파일 이름 추출
-        const uid = `file-${index}` // 고유 ID 생성
+    /* 이미지를 Upload 컴포넌트 표시용 객체로 변환 */
+    const toUploadFileList = () => {
+      //기존 이미지를 Upload 컴포넌트 표시용 객체로 변환
+      const uploadList = form.imgPath.map((url, index) => {
+        const fileName = url.split('/').pop()
         return {
           name: fileName,
-          url, // 파일 URL
-          uid,
+          url: url,
+          uid: `preloaded-${index}`,
+          status: 'ready',
+          raw: null,
         }
       })
-      fileList.value = [...updatedList]
+
+      files.value = uploadList
     }
 
-    //수정버튼 클릭시 수정 페이지로 이동
+    /* 게시글 수정 버튼 클릭시, 수정 페이지로 이동 */
+    /* 게시글 수정 버튼 클릭시, 게시글 수정 */
     const modifyBoard = async () => {
+      //게시글 수정 토글된 경우(게시글 수정)
       if (!editBoardToggle.value) {
         if (!form.title.trim() || !form.content.trim()) {
-          ElMessageBox.alert('제목과 내용을 입력해주세요!', '', {
-            confirmButtonText: '확인',
-            type: 'warning',
-          }).catch(() => {})
+          //모든 필드 입력 확인
+          await showAlertBox(
+            MESSAGES.REQUIRE_ALL_FIELDS,
+            MESSAGES.WARNING
+          ).catch(() => {})
         } else {
-          //파일 업로드 수행 API 호출
-          if (fileData.has('files')) {
-            let fileNames = []
+          //신규 업로드 파일 추출(raw가 있는 파일)
+          const uploadFiles = files.value.filter((file) => file.raw != null)
+
+          //신규 업로드 파일이 있는 경우
+          if (uploadFiles.length > 0) {
+            // FormData 생성
+            const formData = new FormData()
+            uploadFiles.forEach((file) => formData.append('files', file.raw))
+
             //S3에서 PresignedURL 발급
-            const presignedURLs = await boardAPI.getPresignedURL(fileData)
-            //S3에 업로드
-            const files = fileData.getAll('files')
+            const presignedURLs = await boardAPI.getPresignedURL(formData)
+
+            const imgPath = []
             for (let i = 0; i < presignedURLs.length; i++) {
-              const file = files[i] // FormData에서 해당 파일 가져오기
-              // S3에 파일 업로드
-              const response = await boardAPI.uploadFile(presignedURLs[i], file)
-              fileNames.push(decodeURIComponent(response.split('/')[3]))
+              //S3에 파일 업로드
+              const response = await boardAPI.uploadFile(
+                presignedURLs[i],
+                uploadFiles[i].raw
+              )
+
+              //파일 이름만 추출하여 imgPath에 저장
+              imgPath.push(decodeURIComponent(response.split('/')[3]))
             }
+
+            //최종 imgPath에 기존 파일명과 신규 업로드 파일명 저장
             form.imgPath = [
-              ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
-              ...fileNames, // 새로 업로드된 파일명 추가
+              ...files.value
+                .filter((file) => !file.raw)
+                .map((file) => file.url.split('/').pop()), // 기존 파일명
+              ...imgPath, //신규 업로드 파일명
             ]
           }
-          //s3에서 파일 삭제 + 서버 만들어야 함
-          if (deletedImages.value.length > 0) {
-            const deletePayload = { keys: deletedImages.value }
 
-            await boardAPI.deleteFiles(deletePayload)
+          //삭제할 이미지가 있는 경우, S3에서 이미지 삭제
+          if (deletedImages.value.length > 0) {
+            await boardAPI.deleteFiles({ keys: deletedImages.value })
           }
+
+          //***이거 없애고 한번 더 확인해보***
           form.imgPath = [
             ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
           ]
 
-          //저장 수행 API 호출
+          //저장 API 호출
           const response = await boardAPI.createBoard(form)
 
           if (response.success) {
-            ElMessageBox.alert('저장되었습니다.', '', {
-              confirmButtonText: '확인',
-              type: 'success',
-            })
+            await showAlertBox(MESSAGES.SUCCESS_SAVE, MESSAGES.SUCCESS)
               .then(() => {
                 form.imgPath = []
                 deletedImages.value = []
-                fileList.value = []
-                fileData = new FormData()
                 getBoardDetail()
                 editBoardToggle.value = true
               })
               .catch(() => {})
           } else {
-            ElMessageBox.alert(response.message, '', {
-              confirmButtonText: '확인',
-              type: 'error',
-            }).catch(() => {})
+            await showAlertBox(response.message, MESSAGES.ERROR).catch(() => {})
           }
         }
       } else {
-        //사용자가 작성자이면 수정
+        //게시글 수정 토글 안된 경우(게시글 상세보기)
         if (form.userId == userId) {
-          //토글하기
-          updateFileList()
+          //사용자가 작성자인 경우, 수정
+          //파일 목록을 Upload 컴포넌트 객체로 변환
+          toUploadFileList()
+
+          //게시글 수정 화면으로 토글
           editBoardToggle.value = false
         } else {
-          ElMessageBox.alert('작성자와 일치하지 않습니다.', '', {
-            confirmButtonText: '확인',
-            type: 'warning',
-          }).catch(() => {})
+          //사용자가 작성자가 아닌 경우
+          await showAlertBox(MESSAGES.AUTHOR_MISMATCH, MESSAGES.WARNING).catch(
+            () => {}
+          )
         }
       }
     }
@@ -612,10 +585,7 @@ export default {
       }
 
       if (response.success) {
-        ElMessageBox.alert('댓글이 등록되었습니다.', '', {
-          confirmButtonText: '확인',
-          type: 'success',
-        })
+        await showAlertBox(MESSAGES.SUCCESS_SAVE_COMMENT, MESSAGES.SUCCESS)
           .then(() => {
             newComment.comment = ''
             Object.keys(replyInputs).forEach((key) => (replyInputs[key] = '')) // 모든 대댓글 입력창 초기화
@@ -624,10 +594,7 @@ export default {
           })
           .catch(() => {})
       } else {
-        ElMessageBox.alert(response.message, '', {
-          confirmButtonText: '확인',
-          type: 'error',
-        }).catch(() => {})
+        await showAlertBox(response.message, MESSAGES.ERROR).catch(() => {})
       }
     }
 
@@ -650,10 +617,9 @@ export default {
         comment.editCommentToggle = true // 선택된 댓글만 수정 모드로
         comment.editText = comment.comment
       } else {
-        ElMessageBox.alert('작성자와 일치하지 않습니다.', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        await showAlertBox(MESSAGES.AUTHOR_MISMATCH, MESSAGES.WARNING).catch(
+          () => {}
+        )
       }
     }
 
@@ -661,11 +627,12 @@ export default {
     const deleteComment = async (comment) => {
       if (comment.userId == userId) {
         try {
-          await ElMessageBox.confirm('댓글을 삭제하시겠습니까?', '경고', {
-            confirmButtonText: '삭제',
-            cancelButtonText: '취소',
-            type: 'warning',
-          })
+          await showConfirmBox(
+            MESSAGES.CONFIRM_DELETE,
+            MESSAGES.WARNING_KOR,
+            MESSAGES.WARNING,
+            MESSAGES.DELETE
+          ).catch(() => {})
 
           //삭제 누른 경우에만 삭제 실행
           const response = await boardAPI.deleteComment({
@@ -673,22 +640,14 @@ export default {
           })
 
           if (response.success) {
-            await ElMessageBox.alert('삭제되었습니다.', '', {
-              confirmButtonText: '확인',
-              type: 'success',
-            })
+            await showAlertBox(MESSAGES.SUCCESS_DELETE, MESSAGES.SUCCESS)
               .then(() => {
                 getBoardDetail()
               })
               .catch(() => {})
           } else {
-            await ElMessageBox.alert(
-              response.message || '삭제에 실패했습니다.',
-              '',
-              {
-                confirmButtonText: '확인',
-                type: 'warning',
-              }
+            await showAlertBox(MESSAGES.FAILED_DELETE, MESSAGES.WARNING).catch(
+              () => {}
             )
           }
         } catch (e) {
@@ -696,10 +655,9 @@ export default {
           console.log('사용자가 삭제를 취소했습니다.')
         }
       } else {
-        ElMessageBox.alert('작성자와 일치하지 않습니다.', '', {
-          confirmButtonText: '확인',
-          type: 'warning',
-        }).catch(() => {})
+        await showAlertBox(MESSAGES.AUTHOR_MISMATCH, MESSAGES.WARNING).catch(
+          () => {}
+        )
       }
     }
 
@@ -709,6 +667,18 @@ export default {
       comment.repliesVisible = false
     }
 
+    /* 기존 업로드 이미지 삭제시, deleteImages(삭제 배열)에 추가 */
+    const deletedImage = (url) => {
+      //S3 주소로부터 파일명을 추출하여 삭제 이미지 배열에 저장
+      const fileName = url.split('/').pop()
+      if (!deletedImages.value.includes(fileName)) {
+        deletedImages.value.push(fileName)
+      }
+
+      //form.imgPath에서 제거
+      form.imgPath = form.imgPath.filter((imgUrl) => imgUrl !== url)
+    }
+
     return {
       goBack,
       form,
@@ -716,11 +686,8 @@ export default {
       sysNoParam,
       editBoardToggle,
       getBoardDetail,
-      addImgPath,
       imgPreview,
-      removeImgPath,
-      updateFileList,
-      fileList,
+      toUploadFileList,
       previewImage,
       dialogVisible,
       deletedImages,
@@ -735,6 +702,8 @@ export default {
       editComment,
       deleteComment,
       cancleEditComment,
+      files,
+      deletedImage,
     }
   },
 }

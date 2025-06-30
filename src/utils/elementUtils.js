@@ -1,11 +1,11 @@
 import { ElMessageBox } from 'element-plus'
 
 /* ConfirmBox */
-export function showConfirmBox(message, title = '확인') {
+export function showConfirmBox(message, title, type, confirmText) {
   return ElMessageBox.confirm(message, title, {
-    confirmButtonText: '확인',
+    confirmButtonText: confirmText,
     cancelButtonText: '취소',
-    type: 'warning',
+    type: type,
   })
 }
 
