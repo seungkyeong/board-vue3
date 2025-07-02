@@ -36,7 +36,7 @@ const emit = defineEmits(['update:files', 'preview'])
 
 const fileList = ref([])
 
-// props.files가 변경되면 동기화
+/* props.files가 변경되면 동기화 */
 watch(
   () => props.files,
   (newFiles = []) => {

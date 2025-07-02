@@ -74,213 +74,18 @@
       <img :src="previewImage" alt="미리보기" style="width: 100%" />
     </el-dialog>
 
-    <div class="comment-container" v-if="editBoardToggle">
-      <div class="createComment-container">
-        <el-input
-          v-model="newComment.comment"
-          type="textarea"
-          :rows="3"
-          resize="none"
-          placeholder="댓글을 입력해주세요."
-        />
-        <el-button type="primary" @click="createComment(null)">등록</el-button>
-      </div>
-
-      <div
-        v-for="comment in commentList"
-        :key="comment.sysNo"
-        class="comment-item"
-        style="padding-top: 30px"
-      >
-        <!-- 프로필 -->
-        <div class="comment-item-user">
-          <!-- 좌측 프로필 -->
-          <div class="comment-user-info">
-            <!-- 프로필 이미지 -->
-            <el-avatar
-              class="profile-img"
-              :size="40"
-              :src="require('@/assets/profile.png')"
-            />
-            <!-- 생성일자 -->
-            <div class="comment-item-user-idDate">
-              <span class="comment-userId" style="font-size: 17px">{{
-                comment.userId
-              }}</span>
-              <span class="comment-createDate">{{ comment.createDate }}</span>
-            </div>
-          </div>
-
-          <!-- 우측 프로필 -->
-          <!-- 더보기 메뉴(⋮) -->
-          <template
-            v-if="comment.userSysNo !== null && !comment.editCommentToggle"
-          >
-            <el-dropdown trigger="click">
-              <span class="el-dropdown-link" style="cursor: pointer">
-                <el-icon><MoreFilled /></el-icon>
-              </span>
-              <template v-slot:dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="editComment(comment)"
-                    >수정하기</el-dropdown-item
-                  >
-                  <el-dropdown-item @click="deleteComment(comment)"
-                    >삭제하기</el-dropdown-item
-                  >
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </template>
-        </div>
-
-        <!-- 댓글 내용 -->
-        <div v-if="!comment.editCommentToggle">
-          <p class="comment-text">
-            <template v-if="comment.userSysNo == null">
-              <el-icon style="margin-right: 10px"><WarningFilled /></el-icon>
-            </template>
-            {{ comment.comment }}
-          </p>
-        </div>
-        <div v-else style="margin-left: 45px; margin-top: 10px">
-          <div style="display: flex; gap: 10px; width: 100%">
-            <el-input
-              v-model="comment.editText"
-              type="textarea"
-              :rows="3"
-              resize="none"
-              style="flex: 1"
-            />
-            <el-button type="primary" @click="createComment(comment)">
-              수정
-            </el-button>
-          </div>
-        </div>
-
-        <!-- 답글 버튼 -->
-        <div v-if="!comment.editCommentToggle">
-          <el-button
-            class="comment-replyList"
-            type="primary"
-            @click="showReplyList(comment)"
-            >답글 {{ comment.replies.length }}</el-button
-          >
-        </div>
-        <div v-else>
-          <el-button
-            class="comment-replyList"
-            @click="cancleEditComment(comment)"
-            style="margin-top: 10px"
-          >
-            취소
-          </el-button>
-        </div>
-
-        <!-- 대댓글 리스트 -->
-        <div v-if="!comment.editCommentToggle">
-          <div v-if="comment.repliesVisible">
-            <div
-              v-for="reply in comment.replies"
-              :key="reply.sysNo"
-              class="replies"
-              style="padding-top: 10px"
-            >
-              <!-- 프로필 -->
-              <div class="comment-item-user">
-                <!-- 좌측 프로필 -->
-                <div class="comment-user-info">
-                  <!-- 프로필 이미지 -->
-                  <el-avatar
-                    class="profile-img"
-                    :size="40"
-                    :src="require('@/assets/profile.png')"
-                  />
-                  <!-- 생성일자 -->
-                  <div class="comment-item-user-idDate">
-                    <span class="comment-userId" style="font-size: 17px">{{
-                      reply.userId
-                    }}</span>
-                    <span class="comment-createDate">{{
-                      reply.createDate
-                    }}</span>
-                  </div>
-                </div>
-
-                <!-- 우측 프로필 -->
-                <!-- 더보기 메뉴(⋮) -->
-                <template
-                  v-if="reply.userSysNo !== null && !reply.editCommentToggle"
-                >
-                  <el-dropdown trigger="click">
-                    <span class="el-dropdown-link" style="cursor: pointer">
-                      <el-icon><MoreFilled /></el-icon>
-                    </span>
-                    <template v-slot:dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item @click="editComment(reply)"
-                          >수정하기</el-dropdown-item
-                        >
-                        <el-dropdown-item @click="deleteComment(reply)"
-                          >삭제하기</el-dropdown-item
-                        >
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </template>
-              </div>
-              <!-- 댓글 내용 -->
-              <div v-if="!reply.editCommentToggle">
-                <p class="comment-text">
-                  <template v-if="reply.userSysNo == null">
-                    <el-icon style="margin-right: 10px"
-                      ><WarningFilled
-                    /></el-icon> </template
-                  >{{ reply.comment }}
-                </p>
-              </div>
-              <div v-else style="margin-left: 45px; margin-top: 10px">
-                <div style="display: flex; gap: 10px; width: 100%">
-                  <el-input
-                    v-model="reply.editText"
-                    type="textarea"
-                    :rows="3"
-                    resize="none"
-                    style="flex: 1"
-                  />
-                  <el-button type="primary" @click="createComment(reply)">
-                    수정
-                  </el-button>
-                </div>
-              </div>
-
-              <div v-if="reply.editCommentToggle">
-                <el-button
-                  class="comment-replyList"
-                  @click="cancleEditComment(reply)"
-                  style="margin-top: 10px"
-                >
-                  취소
-                </el-button>
-              </div>
-            </div>
-
-            <div class="createReply-container">
-              <el-input
-                v-model="replyInputs[comment.sysNo]"
-                type="textarea"
-                :rows="3"
-                resize="none"
-                placeholder="댓글을 입력해주세요."
-              />
-              <el-button type="primary" @click="createComment(comment)"
-                >등록</el-button
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CommentList
+      :comment-list="commentList"
+      :new-comment="newComment"
+      :reply-inputs="replyInputs"
+      :user-id="userId"
+      @create-comment="createComment"
+      @edit-comment="editComment"
+      @delete-comment="deleteComment"
+      @toggle-reply="showReplyList"
+      @update-new-comment="(val) => (newComment.comment = val)"
+      @update-reply-input="updateReplyInput"
+    />
   </div>
 </template>
 
@@ -290,18 +95,20 @@ import { reactive, onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
-import { MoreFilled, WarningFilled } from '@element-plus/icons-vue'
+// import { MoreFilled, WarningFilled } from '@element-plus/icons-vue'
 import { goBack } from '../utils/routerUtils'
 import { showConfirmBox, showAlertBox } from '../utils/elementUtils'
 import { MESSAGES } from '../constant/messages'
 import ImageUploader from '../components/ImageUploadComp.vue'
+import CommentList from '../components/CommentComp.vue' // 추가
 
 export default {
   components: {
     UserProfile,
-    MoreFilled,
-    WarningFilled,
+    // MoreFilled,
+    // WarningFilled,
     ImageUploader,
+    CommentList,
   },
   setup() {
     const route = useRoute()
@@ -661,12 +468,6 @@ export default {
       }
     }
 
-    //댓글 수정 취소
-    const cancleEditComment = async (comment) => {
-      comment.editCommentToggle = false
-      comment.repliesVisible = false
-    }
-
     /* 기존 업로드 이미지 삭제시, deleteImages(삭제 배열)에 추가 */
     const deletedImage = (url) => {
       //S3 주소로부터 파일명을 추출하여 삭제 이미지 배열에 저장
@@ -677,6 +478,10 @@ export default {
 
       //form.imgPath에서 제거
       form.imgPath = form.imgPath.filter((imgUrl) => imgUrl !== url)
+    }
+
+    const updateReplyInput = ({ sysNo, value }) => {
+      replyInputs[sysNo] = value
     }
 
     return {
@@ -701,9 +506,9 @@ export default {
       buttonStyle,
       editComment,
       deleteComment,
-      cancleEditComment,
       files,
       deletedImage,
+      updateReplyInput,
     }
   },
 }
@@ -743,60 +548,17 @@ export default {
 ::v-deep(.el-form-item__label) {
   font-weight: bold; /* 라벨 텍스트 굵게 */
 }
-.comment-container{
-  border-top: 2px solid grey;
-  padding-top: 20px;
-}
-.createComment-container{
-  display: flex; 
-  gap: 10px; /* textarea와 버튼 사이 간격 조절 */
-}
-.comment-item{
-  border-bottom: 1px solid #c8c8c8;
-}
-.comment-item-user, .detail-user{
+.detail-user{
   display: flex; 
   gap: 10px; /* textarea와 버튼 사이 간격 조절 */
   margin-top: 20px;
   justify-content: flex-start; /*space-between; /* 좌우로 정렬 */
   align-items: center;
 }
-.comment-item-user-idDate, .detail-user-idDate{
+.detail-user-idDate{
   display: flex;
   flex-direction: column;
   text-align: left;
-}
-.comment-createDate{
-  color: grey;
-  font-size: 13px;
-  padding-top:5px;
-}
-.comment-text {
-  text-align: left; /* 왼쪽 정렬 */
-  margin-left: 45px; /* 프로필 이미지 크기 + 여백 */
-}
-.comment-replyList{
-  display: flex; 
-  justify-content: flex-start; /* 왼쪽 정렬 */
-  align-items: center; /* 세로 중앙 정렬 */
-  background-color: white;
-  color: grey;
-  border-color: grey;
-  margin-left: 45px; /* 프로필 사진 크기 + 여백과 맞추기 */
-  margin-bottom: 20px;
-}
-.replies {
-  margin-left: 50px; /* 루트 댓글보다 50px 들여쓰기 */
-  border-top: 1px solid #c8c8c8;
-  padding-left: 10px; /* 내용과 경계선 사이 여백 */
-}
-.createReply-container{
-  display: flex; 
-  gap: 10px; 
-  margin-left: 50px;
-  border-top: 2px solid #c8c8c8;
-  padding-top: 20px;
-  padding-bottom: 20px;
 }
 .like-wrapper {
   display: flex;
@@ -808,13 +570,5 @@ export default {
   content: "";
   display: inline-block;
   width: 50px; /* label 영역의 기본 크기와 동일하게 설정 */
-}
-.comment-user-info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.comment-item-user .el-dropdown {
-  margin-left: auto;
 }
 </style>

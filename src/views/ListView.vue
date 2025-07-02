@@ -133,6 +133,8 @@ export default {
       tableColumns,
       getPageIndex,
       buildBoardListRequest,
+      ROUTES,
+      goToPage,
     }
   },
 }

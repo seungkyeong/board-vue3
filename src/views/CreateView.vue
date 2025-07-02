@@ -84,14 +84,14 @@ export default {
         if (files.value.length > 0) {
           // FormData 생성
           const formData = new FormData()
-          files.value.forEach((file) => formData.append('files', file))
+          files.value.forEach((file) => formData.append('files', file.raw))
 
           //S3에서 PresignedURL 발급
           const presignedURLs = await boardAPI.getPresignedURL(formData)
 
           const imgPath = []
           for (let i = 0; i < presignedURLs.length; i++) {
-            const file = files.value[i]
+            const file = files.value[i].raw
 
             //S3에 파일 업로드
             const response = await boardAPI.uploadFile(presignedURLs[i], file)

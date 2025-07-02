@@ -8,7 +8,9 @@
     <div class="button-container">
       <!-- 글쓰기 버튼-->
       <el-button @click="deleteSelected">삭제 </el-button>
-      <el-button type="primary" @click="goWritePage">글쓰기 </el-button>
+      <el-button type="primary" @click="goToPage(ROUTES.CREATE_BOARD)"
+        >글쓰기
+      </el-button>
     </div>
     <!-- 게시판 리스트 테이블-->
     <div class="table-container">
