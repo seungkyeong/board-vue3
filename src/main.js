@@ -6,10 +6,12 @@ import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import { useAuthStore } from './store/auth'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 //main.js에 적용하면 vue 프로젝트 전체에 적용되서 사용 가능
 
 // Pinia 생성
 const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
 
 // Vue 애플리케이션 초기화
 const app = createApp(App)

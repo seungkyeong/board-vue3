@@ -14,6 +14,7 @@ import ViewTopListView from '../views/ViewTopListView.vue'
 import MyBoardListView from '../views/MyBoardListView.vue'
 import MyLikeListView from '../views/MyLikeListView.vue'
 import ResetPassword from '../views/ResetPassword.vue'
+import { usePagingStore } from '../store/page'
 
 const routes = [
   {
@@ -96,6 +97,17 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+})
+
+/* 페이지 이동시 검색 조건, pageIndex 초기화 */
+router.beforeEach((to, from, next) => {
+  const pagingStore = usePagingStore()
+
+  if (from.name && to.name !== from.name) {
+    pagingStore.reset()
+  }
+
+  next()
 })
 
 export default router

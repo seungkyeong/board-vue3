@@ -28,7 +28,7 @@
     <div class="paging-container">
       <PagingComp
         :total="allBoardListCount"
-        v-model:currentPage="currentPage"
+        v-model:currentPage="pagingStore.pageIndex"
       />
     </div>
   </div>
@@ -43,6 +43,7 @@ import BoardList from '../components/BoardList.vue'
 import { goToPage } from '../utils/routerUtils'
 import { ROUTES } from '../constant/routes'
 import PagingComp from '../components/PagingComp.vue'
+import { usePagingStore } from '../store/page'
 
 export default {
   components: {
@@ -51,13 +52,13 @@ export default {
     PagingComp,
   },
   setup() {
+    const pagingStore = usePagingStore()
     const authStore = useAuthStore()
     const userId = authStore.getUserId
     const userSysNo = authStore.getSysNo
 
     const allBoardListCount = ref(1) //전체 게시판 목록 개수
     const boardList = ref([]) //현재 표시할 게시판 데이터
-    const currentPage = ref(1)
     const pageSize = 10
 
     /* 테이블 컬럼 정의 */
@@ -77,10 +78,8 @@ export default {
     })
 
     /* 게시글 목록 조회 */
-    const getBoardList = async (searchList = {}) => {
-      const response = await boardAPI.getBoardList(
-        buildBoardListRequest(searchList)
-      )
+    const getBoardList = async () => {
+      const response = await boardAPI.getBoardList(buildBoardListRequest())
       if (response.success) {
         allBoardListCount.value = response.data[0] //게시판 목록 전체 개수
         boardList.value = response.data[1] //게시판 목록 조회
@@ -88,17 +87,19 @@ export default {
     }
 
     /* 게시글 목록 조회 Request Data 만들기 */
-    const buildBoardListRequest = (searchList = {}) => ({
+    const buildBoardListRequest = () => ({
       type: 'likeList',
-      searchList,
-      pageSize,
-      pageIndex: getPageIndex(),
+      searchList: pagingStore.searchFilters,
+      pageSize: pagingStore.pageSize,
+      pageIndex: pagingStore.pageIndex - 1,
       userId,
       userSysNo,
     })
 
     /* 검색란 Enter시 게시글 조회(검색) */
     const getSearchBoardList = (filters) => {
+      pagingStore.searchFilters = filters //검색 조건 저장
+      pagingStore.pageIndex = 1 //1페이지로 초기화
       getBoardList(filters)
     }
 
@@ -122,19 +123,16 @@ export default {
       return '' // 나머지는 기본 스타일
     }
 
-    /* PageIndex 계산 -- Paging 객체로 옮기기 */
-    const getPageIndex = () => {
-      return currentPage.value - 1
-    }
-
-    /* currentPage 변경 감지하여 게시글 조회 */
-    watch(currentPage, () => {
-      getBoardList()
-    })
+    /* pageIndex 변경 감지하여 게시글 조회 */
+    watch(
+      () => pagingStore.pageIndex,
+      () => {
+        getBoardList()
+      }
+    )
 
     return {
       boardList,
-      currentPage,
       pageSize,
       allBoardListCount,
       goToDetailPage,
@@ -143,8 +141,8 @@ export default {
       getRowClassName,
       goToPage,
       ROUTES,
-      getPageIndex,
       tableColumns,
+      pagingStore,
     }
   },
 }
