@@ -3,6 +3,8 @@
   <UserProfile />
 
   <div class="container">
+    <!-- 게시글 상세 폼 -->
+    <!-- 게시글 작성자 프로필-->
     <div class="detail-user" v-if="editBoardToggle">
       <el-avatar
         class="profile-img"
@@ -17,6 +19,7 @@
       </div>
     </div>
 
+    <!-- 게시글 상세 내용 -->
     <el-form
       :model="form"
       label-width="auto"
@@ -64,6 +67,7 @@
       </el-form-item>
     </el-form>
 
+    <!-- 버튼 영역 -->
     <div class="button-container">
       <el-button type="primary" @click="modifyBoard">수정</el-button>
       <el-button @click="goBack">목록</el-button>
@@ -74,18 +78,80 @@
       <img :src="previewImage" alt="미리보기" style="width: 100%" />
     </el-dialog>
 
-    <CommentList
-      :comment-list="commentList"
-      :new-comment="newComment"
-      :reply-inputs="replyInputs"
-      :user-id="userId"
-      @create-comment="createComment"
-      @edit-comment="editComment"
-      @delete-comment="deleteComment"
-      @toggle-reply="showReplyList"
-      @update-new-comment="(val) => (newComment.comment = val)"
-      @update-reply-input="updateReplyInput"
-    />
+    <!-- 댓글 컴포넌트 -->
+    <div class="comment-container" v-if="editBoardToggle">
+      <!-- 댓글 생성 컴포넌트 -->
+      <CommentEditor
+        v-model="newComment.comment"
+        @comment-create="createComment"
+      />
+
+      <!-- 댓글 리스트 -->
+      <div
+        v-for="comment in commentList"
+        :key="comment.sysNo"
+        class="comment-item"
+        style="padding-top: 30px"
+      >
+        <!-- 프로필 -->
+        <div class="comment-item-user">
+          <div class="comment-user-info">
+            <UserInfo
+              :comment="comment"
+              @editComment="editComment"
+              @deleteComment="deleteComment"
+            />
+          </div>
+        </div>
+
+        <!-- 댓글 내용 -->
+        <CommentContent
+          :comment="comment"
+          @comment-edit="createComment"
+          @cancel-edit="cancleEditComment"
+          @toggle-reply="showReplyList"
+        />
+
+        <!-- 대댓글 리스트 -->
+        <div v-if="!comment.editCommentToggle">
+          <div v-if="comment.repliesVisible">
+            <div
+              v-for="reply in comment.replies"
+              :key="reply.sysNo"
+              class="replies"
+              style="padding-top: 10px; margin-left: 50px"
+            >
+              <!-- 프로필 -->
+              <div class="comment-item-user">
+                <div class="comment-user-info">
+                  <UserInfo
+                    :comment="reply"
+                    @editComment="editComment"
+                    @deleteComment="deleteComment"
+                  />
+                </div>
+              </div>
+
+              <!-- 댓글 내용 -->
+              <CommentContent
+                :comment="reply"
+                @comment-edit="createComment"
+                @cancel-edit="cancleEditComment"
+                @toggle-reply="showReplyList"
+              />
+            </div>
+
+            <!-- 대댓글 생성 컴포넌트 -->
+            <CommentEditor
+              class="createReply-container"
+              v-model="replyInputs[comment.sysNo]"
+              :comment="comment"
+              @comment-create="createComment"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -95,40 +161,41 @@ import { reactive, onMounted, ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import boardAPI from '../api/BoardAPI'
 import { useAuthStore } from '../store/auth'
-// import { MoreFilled, WarningFilled } from '@element-plus/icons-vue'
 import { goBack } from '../utils/routerUtils'
-import { showConfirmBox, showAlertBox } from '../utils/elementUtils'
+import { showAlertBox } from '../utils/elementUtils'
 import { MESSAGES } from '../constant/messages'
 import ImageUploader from '../components/ImageUploadComp.vue'
-import CommentList from '../components/CommentComp.vue' // 추가
+import UserInfo from '../components/UserInfo.vue'
+import CommentEditor from '../components/CommentEditor.vue'
+import CommentContent from '../components/CommentContent.vue'
 
 export default {
   components: {
     UserProfile,
-    // MoreFilled,
-    // WarningFilled,
     ImageUploader,
-    CommentList,
+    UserInfo,
+    CommentEditor,
+    CommentContent,
   },
   setup() {
     const route = useRoute()
-    const sysNoParam = route.params.sysNo // URL 경로에서 sysNo를 가져옴
+    const sysNoParam = route.params.sysNo //URL에서 게시글 sysNo 추출
 
     const authStore = useAuthStore()
     const userId = authStore.getUserId
     const userSysNo = authStore.getSysNo
 
-    const editBoardToggle = ref(true)
     let deletedImages = ref([]) // 삭제된 기존 이미지
     const previewImage = ref('')
     const dialogVisible = ref(false)
+    const files = ref([])
+
     const commentList = ref([])
     const replyInputs = reactive({})
     const isLiked = ref(false) // 좋아요 상태
+    const editBoardToggle = ref(true)
 
-    const files = ref([]) // CustomUpload v-model로 바인딩할 files 배열
-
-    //Board Detail Form
+    /* 게시글 상세 폼 */
     const form = reactive({
       sysNo: '',
       title: '',
@@ -139,27 +206,27 @@ export default {
       createDate: '',
     })
 
-    //새로운 댓글
+    /* 신규 댓글 */
     const newComment = reactive({
       sysNo: '',
-      boardSysNo: '', //미리 세팅되어야 함
+      boardSysNo: '',
       title: '',
       comment: '',
-      userId: userId, //미리 세팅되어야 함
-      userSysNo: userSysNo, //미리 세팅되어야 함
+      userId: userId,
+      userSysNo: userSysNo,
       boardCreater: '',
       boardCreaterSysNo: '',
     })
 
-    //새로운 답글
+    /* 신규 답글 */
     const newReply = reactive({
       sysNo: '',
       parSysNo: '',
-      boardSysNo: '', //미리 세팅되어야 함
+      boardSysNo: '',
       title: '',
       comment: '',
-      userId: userId, //미리 세팅되어야 함
-      userSysNo: userSysNo, //미리 세팅되어야 함
+      userId: userId,
+      userSysNo: userSysNo,
       boardCreater: '',
       boardCreaterSysNo: '',
     })
@@ -210,9 +277,9 @@ export default {
         //댓글 리스트 세팅
         commentList.value = response.data[1].map((comment) => ({
           ...comment,
-          editCommentToggle: false, // 수정 모드 여부
-          editText: comment.comment, // 수정 중 텍스트 초기값
-          repliesVisible: false, // 초기에는 대댓글 숨김
+          editCommentToggle: false, //수정 모드 여부
+          editText: comment.comment, //수정 텍스트
+          repliesVisible: false, //대댓글 표시 여부
           replies:
             comment.replies?.map((reply) => ({
               ...reply,
@@ -221,16 +288,16 @@ export default {
             })) || [],
         }))
         if (response.data[0].likeFlag == 'like') {
-          isLiked.value = true // 파란 버튼 (좋아요 누름)
+          isLiked.value = true //파란 버튼(좋아요 누름)
         } else {
-          isLiked.value = false // 흰 버튼 (좋아요 안 누름)
+          isLiked.value = false //흰 버튼(좋아요 안 누름)
         }
       } else {
         await showAlertBox(response.message, MESSAGES.ERROR).catch(() => {})
       }
     }
 
-    //로드시 게시물 조회
+    /* 로드시 게시물 조회 */
     onMounted(() => {
       getBoardDetail()
     })
@@ -309,9 +376,9 @@ export default {
           }
 
           //***이거 없애고 한번 더 확인해보***
-          form.imgPath = [
-            ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
-          ]
+          // form.imgPath = [
+          //   ...form.imgPath.map((url) => url.split('/').pop()), // 기존 파일명만 추출
+          // ]
 
           //저장 API 호출
           const response = await boardAPI.createBoard(form)
@@ -347,10 +414,10 @@ export default {
       }
     }
 
-    //좋아요 버튼 클릭시 Redis 좋아요 Count 증가
+    /* 좋아요 버튼 클릭시, 좋아요 로그 생성 */
     const toggleLikeBtn = async () => {
       if (isLiked.value) {
-        //좋아요 누른 상황 -> 취소인 경우
+        //좋아요 누른 상황 -> 취소인 경우, 좋아요 로그 삭제
         isLiked.value = false
         await boardAPI.updateLike({
           action: 'unLike',
@@ -359,7 +426,7 @@ export default {
           userSysNo: userSysNo,
         })
       } else {
-        //좋아요 안누른 상황 -> 좋아요 누른 경우
+        //좋아요 안누른 상황 -> 좋아요 누른 경우, 좋아요 로그 생성
         isLiked.value = true
         await boardAPI.updateLike({
           action: 'like',
@@ -370,9 +437,10 @@ export default {
       }
     }
 
-    //댓글 등록 버튼 클릭시 댓글 저장
+    /* 댓글/대댓글 신규/수정 */
     const createComment = async (comment = null) => {
       let response
+
       //댓글, 대댓글 수정
       if (comment != null && comment.editCommentToggle) {
         newReply.comment = comment.editText
@@ -405,64 +473,41 @@ export default {
       }
     }
 
+    /* 답글 토글 */
     const showReplyList = (comment) => {
-      comment.repliesVisible = !comment.repliesVisible // 토글 기능
+      comment.repliesVisible = !comment.repliesVisible
     }
 
-    // 버튼 스타일 (computed)
+    /* 좋아요 버튼 스타일 */
     const buttonStyle = computed(() => {
       return {
-        backgroundColor: isLiked.value ? '#409EFF' : '#ffffff', // 좋아요가 눌리면 파란색, 아니면 흰색
-        color: isLiked.value ? '#ffffff' : 'black', // 눌린 상태는 흰색 텍스트, 아니면 파란색 텍스트
-        borderColor: isLiked.value ? '#409EFF' : '#dcdfe6', // 눌린 상태는 파란색 테두리, 아니면 기본 테두리
+        backgroundColor: isLiked.value ? '#409EFF' : '#ffffff',
+        color: isLiked.value ? '#ffffff' : 'black',
+        borderColor: isLiked.value ? '#409EFF' : '#dcdfe6',
       }
     })
 
-    //댓글 수정
+    /* 댓글 수정 버튼 클릭시, 수정 모드로 토글 */
     const editComment = async (comment) => {
-      if (comment.userId == userId) {
-        comment.editCommentToggle = true // 선택된 댓글만 수정 모드로
-        comment.editText = comment.comment
-      } else {
-        await showAlertBox(MESSAGES.AUTHOR_MISMATCH, MESSAGES.WARNING).catch(
-          () => {}
-        )
-      }
+      comment.editCommentToggle = true //선택된 댓글/대댓글만 수정폼으로 토글
+      comment.editText = comment.comment
     }
 
-    //댓글 삭제
+    /* 댓글 삭제 버튼 클릭시, 댓글 삭제 */
     const deleteComment = async (comment) => {
-      if (comment.userId == userId) {
-        try {
-          await showConfirmBox(
-            MESSAGES.CONFIRM_DELETE,
-            MESSAGES.WARNING_KOR,
-            MESSAGES.WARNING,
-            MESSAGES.DELETE
-          ).catch(() => {})
+      //삭제 누른 경우에만 삭제 실행
+      const response = await boardAPI.deleteComment({
+        sysNo: comment.sysNo,
+      })
 
-          //삭제 누른 경우에만 삭제 실행
-          const response = await boardAPI.deleteComment({
-            sysNo: comment.sysNo,
+      if (response.success) {
+        await showAlertBox(MESSAGES.SUCCESS_DELETE, MESSAGES.SUCCESS)
+          .then(() => {
+            getBoardDetail()
           })
-
-          if (response.success) {
-            await showAlertBox(MESSAGES.SUCCESS_DELETE, MESSAGES.SUCCESS)
-              .then(() => {
-                getBoardDetail()
-              })
-              .catch(() => {})
-          } else {
-            await showAlertBox(MESSAGES.FAILED_DELETE, MESSAGES.WARNING).catch(
-              () => {}
-            )
-          }
-        } catch (e) {
-          // 사용자가 '취소' 버튼을 눌렀거나 confirm이 reject된 경우
-          console.log('사용자가 삭제를 취소했습니다.')
-        }
+          .catch(() => {})
       } else {
-        await showAlertBox(MESSAGES.AUTHOR_MISMATCH, MESSAGES.WARNING).catch(
+        await showAlertBox(MESSAGES.FAILED_DELETE, MESSAGES.WARNING).catch(
           () => {}
         )
       }
@@ -480,8 +525,11 @@ export default {
       form.imgPath = form.imgPath.filter((imgUrl) => imgUrl !== url)
     }
 
-    const updateReplyInput = ({ sysNo, value }) => {
-      replyInputs[sysNo] = value
+    /* 댓글 수정 취소시, 수정폼에서 댓글폼으로 토글 */
+    const cancleEditComment = async (comment) => {
+      comment.editCommentToggle = false
+      comment.repliesVisible = false
+      comment.editText = comment.comment
     }
 
     return {
@@ -508,7 +556,7 @@ export default {
       deleteComment,
       files,
       deletedImage,
-      updateReplyInput,
+      cancleEditComment,
     }
   },
 }
@@ -548,10 +596,9 @@ export default {
 ::v-deep(.el-form-item__label) {
   font-weight: bold; /* 라벨 텍스트 굵게 */
 }
-.detail-user{
+.comment-item-user, .detail-user{
   display: flex; 
   gap: 10px; /* textarea와 버튼 사이 간격 조절 */
-  margin-top: 20px;
   justify-content: flex-start; /*space-between; /* 좌우로 정렬 */
   align-items: center;
 }
@@ -570,5 +617,16 @@ export default {
   content: "";
   display: inline-block;
   width: 50px; /* label 영역의 기본 크기와 동일하게 설정 */
+}
+
+
+
+.comment-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.createReply-container{
+  margin-left: 50px;
 }
 </style>
