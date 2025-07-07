@@ -95,7 +95,7 @@
       >
         <!-- 프로필 -->
         <div class="comment-item-user">
-          <div class="comment-user-info">
+          <div class="comment-item-user-info">
             <UserInfo
               :comment="comment"
               @editComment="editComment"
@@ -123,7 +123,7 @@
             >
               <!-- 프로필 -->
               <div class="comment-item-user">
-                <div class="comment-user-info">
+                <div class="comment-item-user-info">
                   <UserInfo
                     :comment="reply"
                     @editComment="editComment"
@@ -611,20 +611,16 @@ export default {
   display: flex;
   align-items: center;
 }
-
-/* label 자리 공백을 유지 */
-.like-wrapper::before {
+.like-wrapper::before { /* label 자리 공백을 유지 */
   content: "";
   display: inline-block;
-  width: 50px; /* label 영역의 기본 크기와 동일하게 설정 */
+  width: 50px; 
 }
-
-
-
-.comment-user-info {
+.comment-item-user-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
 }
 .createReply-container{
   margin-left: 50px;

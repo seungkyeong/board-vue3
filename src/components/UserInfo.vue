@@ -1,15 +1,19 @@
 <!-- 사용자 프로필, DropDown -->
 <template>
-  <div class="comment-user-info">
-    <el-avatar :src="require('@/assets/profile.png')" :size="40" />
-    <div class="comment-item-user-idDate">
-      <span class="comment-userId">{{ props.comment.userId }}</span>
-      <span class="comment-createDate">{{ props.comment.createDate }}</span>
+  <div class="comment-header">
+    <div class="comment-user-info">
+      <el-avatar :src="require('@/assets/profile.png')" :size="40" />
+      <div class="comment-item-user-idDate">
+        <span class="comment-userId">{{ props.comment.userId }}</span>
+        <span class="comment-createDate">{{ props.comment.createDate }}</span>
+      </div>
     </div>
-  </div>
 
-  <template v-if="comment.userSysNo !== null && !comment.editCommentToggle">
-    <el-dropdown trigger="click">
+    <el-dropdown
+      v-if="comment.userSysNo !== null && !comment.editCommentToggle"
+      trigger="click"
+      class="el-dropdown-wrapper"
+    >
       <span class="el-dropdown-link" style="cursor: pointer">
         <el-icon><MoreFilled /></el-icon>
       </span>
@@ -20,7 +24,7 @@
         </el-dropdown-menu>
       </template>
     </el-dropdown>
-  </template>
+  </div>
 </template>
 
 <script setup>
@@ -92,6 +96,16 @@ const deleteComment = async () => {
 .el-dropdown-link {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
+}
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-top: 1px solid #c8c8c8;
+  padding-top:20px;
+}
+.el-dropdown-wrapper {
+  margin-left: auto; 
 }
 </style>

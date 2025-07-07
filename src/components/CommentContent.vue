@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-content-block">
+  <div>
     <!-- 본문 표시 -->
     <div v-if="!comment.editCommentToggle" class="comment-text">
       <p>
@@ -92,14 +92,9 @@ const editComment = () => {
 </script>
 
 <style scoped>
-.comment-content-block {
-  margin-top: 10px;
-  border-bottom: 1px solid #c8c8c8;
-}
 .comment-edit {
   margin-top: 10px;
 }
-
 .comment-replyList {
   display: flex; 
   justify-content: flex-start; /* 왼쪽 정렬 */
